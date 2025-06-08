@@ -60,6 +60,12 @@ return [
             'report' => false,
         ],
 
+        'dicom' => [
+            'driver' => 'local',
+            'root'   => storage_path('app/dicom'),
+            'visibility' => 'private',
+        ],
+
     ],
 
     /*
