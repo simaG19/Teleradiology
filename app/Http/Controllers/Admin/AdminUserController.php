@@ -27,12 +27,48 @@ class AdminUserController extends Controller
     public function hospitals()
     {
         // Fetch all users with role “hospital”
-        $hospitals = User::role('hospital')
-                         ->orderBy('name')
-                         ->get(['id','name','email']);
+        // $hospitals = User::role('hospital')
+        //                  ->orderBy('name')
+        //                  ->get(['id','name','email']);
+         $hospitals = User::role('hospital')->get();
 
         return view('admin.users.hospitals', compact('hospitals'));
     }
+
+    public function createHospital()
+{
+    return view('admin.users.create-hospital');
+}
+
+// Validate and store a new hospital user
+public function storeHospital(Request $request)
+{
+    $data = $request->validate([
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|email|unique:users,email',
+        'password' => 'required|string|min:8|confirmed',
+        'monthly_file_limit'    => 'required|integer|min:0',
+        'uploader_account_limit'=> 'required|integer|min:0',
+        'billing_rate'          => 'required|numeric|min:0',
+
+
+    ]);
+
+    $user = User::create([
+        'name'     => $data['name'],
+        'email'    => $data['email'],
+        'password' => bcrypt($data['password']),
+    ]);
+    $user->hospitalProfile()->create([
+    'monthly_file_limit'     => $request->input('monthly_file_limit', 0),
+    'uploader_account_limit' => $request->input('uploader_account_limit', 0),
+]);
+
+    $user->assignRole('hospital');
+
+    return redirect()->route('admin.users.hospitals')
+                     ->with('success', 'Hospital user created successfully.');
+}
 
     /**
      * Show a table of all “Readers” (role = reader), with counts:
