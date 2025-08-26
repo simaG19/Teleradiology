@@ -70,6 +70,21 @@
                                     @enderror
                                 </div>
 
+
+                                <div class="mb-4">
+          <label class="block text-sm font-medium">File Type</label>
+          <select name="file_type_id" required class="mt-1 block w-full border-gray-300 rounded-md">
+            <option value="">— select file type —</option>
+            @foreach(\App\Models\FileType::orderBy('name')->get() as $type)
+              <option value="{{ $type->id }}" {{ old('file_type_id') == $type->id ? 'selected' : '' }}>
+                {{ $type->name }} {{ $type->anatomy ? '— '.$type->anatomy : '' }} — {{ number_format($type->price_per_file,2) }} birr/file
+              </option>
+            @endforeach
+          </select>
+          @error('file_type_id') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
+        </div>
+
+
                                 <!-- Clinical History -->
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-3">
