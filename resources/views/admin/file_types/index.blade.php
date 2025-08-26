@@ -46,6 +46,7 @@
                 <thead class="bg-gray-50">
                   <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Anatomy</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price per File</th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
@@ -54,6 +55,7 @@
                   @foreach($types as $type)
                     <tr class="hover:bg-gray-50">
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $type->name }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $type->anatomy }}</td>
                       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         {{ number_format($type->price_per_file, 2) }} birr
                       </td>
