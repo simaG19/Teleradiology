@@ -40,12 +40,12 @@ Route::middleware(['auth', 'role:admin|super-admin'])
      ->name('admin.')
      ->group(function () {
          // Show “assign to reader” form for one batch
-         Route::get('images/{batch_no}/assign', [AssignmentController::class, 'showBatch'])
-              ->name('images.assign');
+        //  Route::get('images/{batch_no}/assign', [AssignmentController::class, 'showBatch'])
+        //       ->name('images.assign');
 
-         // Handle form submission to actually create assignments
-         Route::post('images/{batch_no}/assign', [AssignmentController::class, 'storeBatch'])
-              ->name('images.assign.store');
+        //  // Handle form submission to actually create assignments
+        //  Route::post('images/{batch_no}/assign', [AssignmentController::class, 'storeBatch'])
+        //       ->name('images.assign.store');
 });
 
 
@@ -90,6 +90,8 @@ Route::middleware(['auth', 'role:admin|super-admin'])
          // … other admin/{images,…} routes …
     // Assignments
     Route::get('images/{batch_no}/assign', [AssignmentController::class, 'showBatch'])->name('assign.reader');
+    Route::post('images/{batch_no}/assign', [AssignmentController::class, 'storeBatch'])->name('images.assign.store');
+
     Route::post('images/{batch_no}/assign', [AssignmentController::class, 'storeBatch'])->name('images.assign.store');
     Route::get('assignments', [AssignmentController::class, 'indexAssignedList'])->name('assignments.index');
     Route::get('assignments/{batch_no}/download', [AssignmentController::class, 'downloadBatch'])->name('assignments.download');
@@ -151,8 +153,6 @@ Route::get('hospitals/uploads', [HospitalController::class,'allUploads'])
 Route::get('batches', [BatchController::class, 'index'])
      ->name('batches.index');
 
-// WRONG: this ends up naming the route "admin.admin.batches.download"
-// CORRECT: this yields "admin.batches.download"
 Route::get('batches/{batch}/download', [BatchController::class,'download'])
      ->name('batches.download');
 
@@ -243,6 +243,21 @@ Route::middleware('auth:uploader')
 
 
 
+     use App\Http\Controllers\PaymentController;
+
+Route::get('/batches/{batch}/pay', [PaymentController::class, 'show'])->name('batches.pay'); // already showing blade
+Route::post('/create-checkout-session/{batch}', [PaymentController::class, 'createCheckoutSession'])->name('checkout.create');
+Route::get('/payments/success/{batch}', [PaymentController::class, 'success'])->name('payments.success');
+Route::get('/payments/cancel', [PaymentController::class, 'cancel'])->name('payments.cancel');
+
+// webhook (no CSRF)
+Route::post('/stripe/webhook', [PaymentController::class, 'webhook'])->name('stripe.webhook');
+
+
+
+
+
+
 
 
 
@@ -253,14 +268,14 @@ Route::middleware(['auth', 'role:reader'])
          // List all batches
          Route::get('assignments', [\App\Http\Controllers\Reader\AssignmentController::class, 'index'])
               ->name('assignments.index');
-
+ Route::get('assignments/{batch_no}/report', [\App\Http\Controllers\Reader\AssignmentController::class, 'createReport'])
+              ->name('assignments.report.create');
          // Download ZIP
          Route::get('assignments/{batch_no}/download', [\App\Http\Controllers\Reader\AssignmentController::class, 'downloadBatch'])
               ->name('assignments.download');
 
          // Create report form
-         Route::get('assignments/{batch_no}/report', [\App\Http\Controllers\Reader\AssignmentController::class, 'createReport'])
-              ->name('assignments.report.create');
+
          Route::post('assignments/{batch_no}/report', [\App\Http\Controllers\Reader\AssignmentController::class, 'storeReport'])
               ->name('assignments.report.store');
 
