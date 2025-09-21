@@ -6,57 +6,87 @@ use App\Models\Batch;
 use Illuminate\Http\Request;
 // use App\Http\Controllers\Admin\FileType;
 use App\Models\FileType;
+
+
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
+
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
 class BatchController extends Controller
 {
-   public function index()
+  public function index(Request $request)
 {
-    $batches = Batch::with('user')
-                    ->orderByDesc('created_at')
-                    ->get();
+    // Base query eager-loading relations you need
+    $query = Batch::with(['user', 'uploader', 'fileType'])
+                  ->orderByDesc('created_at');
+
+    // By default show only unconfirmed batches (confirmed = false OR NULL)
+    if (! $request->boolean('all')) {
+        $query->where(function ($q) {
+            $q->where('confirmed', false)
+              ->orWhereNull('confirmed');
+        });
+    }
+
+    $batches = $query->get();
 
     return view('admin.batches.index', compact('batches'));
 }
 
-    public function download(Batch $batch)
+public function download(Batch $batch)
 {
-    // Adjust this path if your ZIPs are stored somewhere else:
-    $zipPath = storage_path("app/batches/{$batch->id}.zip");
-
-    if (! file_exists($zipPath)) {
-        return back()->withErrors(['download' => 'ZIP file not found.']);
+    if (empty($batch->archive_path)) {
+        return back()->withErrors(['download' => 'Archive path not set for this batch.']);
     }
 
-    return response()->download($zipPath, "{$batch->id}.zip");
+    // Use storage disk local
+    $disk = Storage::disk('local');
+    if (! $disk->exists($batch->archive_path)) {
+        return back()->withErrors(['download' => 'ZIP file not found on disk.']);
+    }
+
+    $fullPath = $disk->path($batch->archive_path); // full server path
+    $downloadName = $batch->id . '.zip';
+
+    return response()->download($fullPath, $downloadName);
 }
+
 
 
     public function editQuote(Batch $batch)
     {
         return view('admin.batches.quote', compact('batch'));
     }
+
+
 public function updateQuote(Request $request, Batch $batch)
 {
     $data = $request->validate([
         'file_type_id' => 'required|exists:file_types,id',
+        'quoted_price' => 'nullable|numeric|min:0',
     ]);
 
     $fileType = FileType::findOrFail($data['file_type_id']);
-    $count    = $batch->images()->count();
-    $total    = $fileType->price_per_file * $count;
 
-    // DEBUG: confirm we hit this point and see values
-    // dd($batch->id, $fileType->id, $count, $total);
+    // Use the file type's price directly (no count)
+    $computedTotal = $fileType->price_per_file;
 
-    // Direct assignment:
-    $batch->file_type_id = $fileType->id;
-    $batch->quoted_price = $total;
-    $saved = $batch->save();
+    // If admin passed a quoted_price use it, otherwise use computed total
+    $total = isset($data['quoted_price']) ? $data['quoted_price'] : $computedTotal;
 
-    // DEBUG: did it save?
-    // dd('saved?', $saved, $batch->fresh()->only(['file_type_id','quoted_price']));
+    $batch->update([
+        'file_type_id'  => $fileType->id,
+        'quoted_price'  => $total,
+        'confirmed'     => true,
+        'confirmed_by'  => Auth::id(),
+        'confirmed_at'  => now(),
+    ]);
 
     return redirect()->route('admin.batches.index')
-                     ->with('success','Price sent to customer.');
+                     ->with('success','Price sent to customer and batch confirmed.');
 }
 
 
