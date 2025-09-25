@@ -10,19 +10,50 @@ use Illuminate\Support\Facades\File;
 use App\Models\Batch;
 
 
+use App\Models\Assignment;
+use App\Models\Report;
+
+use Illuminate\Support\Facades\DB;
+
 use App\Models\FileType;
 class MedicalImageController extends Controller
 {
 
 public function index()
 {
-    $batches = Batch::with('fileType')            // ← eager load
+    // 1) Get all batches for the current uploader and eager load fileType
+    $batches = Batch::with('fileType')
                     ->where('uploader_id', Auth::id())
                     ->orderByDesc('created_at')
                     ->get();
 
-    return view('uploads.index', compact('batches'));
+    if ($batches->isEmpty()) {
+        return view('uploads.index', compact('batches'))->with('reportsMap', collect());
+    }
+
+    // 2) Build a map of batch_id => first Report (joined via assignments)
+    $batchIds = $batches->pluck('id')->toArray();
+
+    // Join reports -> assignments so we can know the batch_id for each report
+    $reportsQuery = Report::select('reports.*', 'assignments.batch_id')
+        ->join('assignments', 'reports.assignment_id', '=', 'assignments.id')
+        ->whereIn('assignments.batch_id', $batchIds)
+        ->orderBy('reports.created_at', 'desc');
+
+    // If you also have reports attached to hospital_uploads (rare for uploader batches),
+    // you can include them similarly. For uploader batches above we use batch_id.
+
+    $reports = $reportsQuery->get();
+
+    // Group by batch_id and keep the newest report per batch
+    $reportsMap = $reports->groupBy('batch_id')->map(function ($group) {
+        return $group->first(); // latest report for that batch
+    });
+
+    // Pass both batches and the map (collection keyed by batch id)
+    return view('uploads.index', compact('batches', 'reportsMap'));
 }
+
     public function create()
     {
         return view('uploads.create');
