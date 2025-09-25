@@ -57,17 +57,28 @@
 </td>
 
 
-       {{-- new Pay button --}}
-      <td class="px-6 py-4 whitespace-nowrap">
-        @if(!is_null($batch->quoted_price))
-          <a href="{{ route('uploads.pay.form', $batch->id) }}"
-             class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
-            Pay
-          </a>
+      {{-- new Pay button --}}
+<td class="px-6 py-4 whitespace-nowrap">
+    @if(!is_null($batch->quoted_price))
+        @if($batch->paid == 1)
+            <!-- Paid (disabled-looking) -->
+            <button type="button"
+                    class="px-3 py-1 bg-gray-200 text-gray-600 rounded cursor-not-allowed"
+                    aria-disabled="true">
+                Paid
+            </button>
         @else
-          <span class="text-gray-400">—</span>
+            <!-- Not paid -> show Pay link -->
+            <a href="{{ route('uploads.pay.form', $batch->id) }}"
+               class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
+                Pay
+            </a>
         @endif
-      </td>
+    @else
+        <span class="text-gray-400">—</span>
+    @endif
+</td>
+
               </tr>
             @endforeach
           </tbody>

@@ -68,272 +68,10 @@
                     </div>
                 </div>
 
-                <!-- Payment Details -->
-                <div class="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
-                        <div class="flex items-center">
-                            <svg class="w-3 h-3 sm:w-4 sm:h-4 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                            </svg>
-                            <span class="text-gray-600">Secure Payment</span>
-                        </div>
-                        <div class="flex items-center">
-                            <svg class="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                            <span class="text-gray-600">Instant Processing</span>
-                        </div>
-                        <div class="flex items-center">
-                            <svg class="w-3 h-3 sm:w-4 sm:h-4 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                            </svg>
-                            <span class="text-gray-600">HIPAA Compliant</span>
-                        </div>
-                    </div>
-                </div>
+
             </div>
 
-            <!-- Payment Methods -->
-            <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 overflow-hidden mb-6">
-                <div class="bg-gray-50 px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-200">
-                    <h3 class="text-lg sm:text-xl font-semibold text-gray-900">Choose Payment Method</h3>
-                    <p class="text-gray-600 mt-1 text-sm sm:text-base">Select your preferred payment option below</p>
-                </div>
 
-                <div class="p-4 sm:p-8">
-                    <form id="paymentForm" action="#" method="POST">
-                        @csrf
-
-                        <!-- Payment Method Selection -->
-                        <div class="mb-6 sm:mb-8">
-                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                                <!-- Card Payment -->
-                                <div class="payment-option" data-method="card_payment">
-                                    <input type="radio" id="card_payment" name="payment_method" value="card_payment" class="sr-only" {{ old('payment_method') == 'card_payment' ? 'checked' : '' }}>
-                                    <label for="card_payment" class="payment-card cursor-pointer block p-3 sm:p-6 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-blue-400 transition duration-200">
-                                        <div class="text-center">
-                                            <div class="w-10 h-10 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-4 bg-blue-100 rounded-lg sm:rounded-xl flex items-center justify-center">
-                                                <svg class="w-5 h-5 sm:w-8 sm:h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                                                </svg>
-                                            </div>
-                                            <h4 class="font-semibold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">Card Payment</h4>
-                                            <p class="text-xs sm:text-sm text-gray-500">Visa, Mastercard</p>
-                                        </div>
-                                    </label>
-                                </div>
-
-                                <!-- Chapa -->
-                                <div class="payment-option" data-method="chapa">
-                                    <input type="radio" id="chapa" name="payment_method" value="chapa" class="sr-only" {{ old('payment_method') == 'chapa' ? 'checked' : '' }}>
-                                    <label for="chapa" class="payment-card cursor-pointer block p-3 sm:p-6 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-400 transition duration-200">
-                                        <div class="text-center">
-                                            <div class="w-10 h-10 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-4 bg-orange-100 rounded-lg sm:rounded-xl flex items-center justify-center">
-                                                <div class="w-5 h-5 sm:w-8 sm:h-8 bg-orange-600 rounded flex items-center justify-center">
-                                                    <span class="text-white font-bold text-xs sm:text-sm">CH</span>
-                                                </div>
-                                            </div>
-                                            <h4 class="font-semibold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">Chapa</h4>
-                                            <p class="text-xs sm:text-sm text-gray-500">Digital Payment</p>
-                                        </div>
-                                    </label>
-                                </div>
-
-                                <!-- Telebirr -->
-                                <div class="payment-option" data-method="telebirr">
-                                    <input type="radio" id="telebirr" name="payment_method" value="telebirr" class="sr-only" {{ old('payment_method') == 'telebirr' ? 'checked' : '' }}>
-                                    <label for="telebirr" class="payment-card cursor-pointer block p-3 sm:p-6 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-yellow-400 transition duration-200">
-                                        <div class="text-center">
-                                            <div class="w-10 h-10 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-4 bg-yellow-100 rounded-lg sm:rounded-xl flex items-center justify-center">
-                                                <div class="w-5 h-5 sm:w-8 sm:h-8 bg-yellow-600 rounded flex items-center justify-center">
-                                                    <span class="text-white font-bold text-xs">TB</span>
-                                                </div>
-                                            </div>
-                                            <h4 class="font-semibold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">TeleBirr</h4>
-                                            <p class="text-xs sm:text-sm text-gray-500">Mobile Money</p>
-                                        </div>
-                                    </label>
-                                </div>
-
-                                <!-- CBE Birr -->
-                                <div class="payment-option" data-method="cbe_birr">
-                                    <input type="radio" id="cbe_birr" name="payment_method" value="cbe_birr" class="sr-only" {{ old('payment_method') == 'cbe_birr' ? 'checked' : '' }}>
-                                    <label for="cbe_birr" class="payment-card cursor-pointer block p-3 sm:p-6 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-green-400 transition duration-200">
-                                        <div class="text-center">
-                                            <div class="w-10 h-10 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-4 bg-green-100 rounded-lg sm:rounded-xl flex items-center justify-center">
-                                                <div class="w-5 h-5 sm:w-8 sm:h-8 bg-green-600 rounded flex items-center justify-center">
-                                                    <span class="text-white font-bold text-xs">CBE</span>
-                                                </div>
-                                            </div>
-                                            <h4 class="font-semibold text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">CBE Birr</h4>
-                                            <p class="text-xs sm:text-sm text-gray-500">Commercial Bank</p>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                            @error('payment_method')
-                                <p class="text-red-500 text-sm mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-
-                        <!-- Payment Forms -->
-                        <div class="space-y-4 sm:space-y-6">
-                            <!-- Card Payment Form -->
-                            <div id="card_payment_form" class="payment-form hidden">
-                                <div class="bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl p-4 sm:p-6">
-                                    <h4 class="font-semibold text-blue-900 mb-3 sm:mb-4 flex items-center text-sm sm:text-base">
-                                        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                                        </svg>
-                                        Card Payment Details
-                                    </h4>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">Cardholder Name</label>
-                                            <input type="text" name="cardholder_name" value="{{ old('cardholder_name') }}"
-                                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 text-sm sm:text-base"
-                                                placeholder="John Doe" />
-                                            @error('cardholder_name')
-                                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">Card Number</label>
-                                            <input type="text" name="card_number" value="{{ old('card_number') }}"
-                                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 text-sm sm:text-base"
-                                                placeholder="1234 5678 9012 3456" />
-                                            @error('card_number')
-                                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-3 sm:gap-4">
-                                            <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">Expiry Date</label>
-                                                <input type="text" name="expiry" value="{{ old('expiry') }}"
-                                                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 text-sm sm:text-base"
-                                                    placeholder="MM/YY" />
-                                                @error('expiry')
-                                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                                @enderror
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">CVV</label>
-                                                <input type="text" name="cvv" value="{{ old('cvv') }}"
-                                                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 text-sm sm:text-base"
-                                                    placeholder="123" />
-                                                @error('cvv')
-                                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Chapa Form -->
-                            <div id="chapa_form" class="payment-form hidden">
-                                <div class="bg-orange-50 border border-orange-200 rounded-lg sm:rounded-xl p-4 sm:p-6">
-                                    <h4 class="font-semibold text-orange-900 mb-3 sm:mb-4 flex items-center text-sm sm:text-base">
-                                        <div class="w-4 h-4 sm:w-5 sm:h-5 bg-orange-600 rounded mr-2 flex items-center justify-center">
-                                            <span class="text-white font-bold text-xs">CH</span>
-                                        </div>
-                                        Chapa Payment Details
-                                    </h4>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
-                                            <input type="text" name="chapa_phone" value="{{ old('chapa_phone') }}"
-                                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition duration-200 text-sm sm:text-base"
-                                                placeholder="+251 9XX XXX XXX" />
-                                            @error('chapa_phone')
-                                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">Transaction Reference</label>
-                                            <input type="text" name="chapa_reference" value="{{ old('chapa_reference') }}"
-                                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition duration-200 text-sm sm:text-base"
-                                                placeholder="Optional reference" />
-                                            @error('chapa_reference')
-                                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- TeleBirr Form -->
-                            <div id="telebirr_form" class="payment-form hidden">
-                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg sm:rounded-xl p-4 sm:p-6">
-                                    <h4 class="font-semibold text-yellow-900 mb-3 sm:mb-4 flex items-center text-sm sm:text-base">
-                                        <div class="w-4 h-4 sm:w-5 sm:h-5 bg-yellow-600 rounded mr-2 flex items-center justify-center">
-                                            <span class="text-white font-bold text-xs">TB</span>
-                                        </div>
-                                        TeleBirr Payment Details
-                                    </h4>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">Mobile Number</label>
-                                            <input type="text" name="telebirr_mobile" value="{{ old('telebirr_mobile') }}"
-                                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition duration-200 text-sm sm:text-base"
-                                                placeholder="+251 9XX XXX XXX" />
-                                            @error('telebirr_mobile')
-                                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">Transaction ID</label>
-                                            <input type="text" name="telebirr_txn_id" value="{{ old('telebirr_txn_id') }}"
-                                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition duration-200 text-sm sm:text-base"
-                                                placeholder="Transaction ID" />
-                                            @error('telebirr_txn_id')
-                                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- CBE Birr Form -->
-                            <div id="cbe_birr_form" class="payment-form hidden">
-                                <div class="bg-green-50 border border-green-200 rounded-lg sm:rounded-xl p-4 sm:p-6">
-                                    <h4 class="font-semibold text-green-900 mb-3 sm:mb-4 flex items-center text-sm sm:text-base">
-                                        <div class="w-4 h-4 sm:w-5 sm:h-5 bg-green-600 rounded mr-2 flex items-center justify-center">
-                                            <span class="text-white font-bold text-xs">CBE</span>
-                                        </div>
-                                        CBE Birr Payment Details
-                                    </h4>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">Account Number</label>
-                                            <input type="text" name="cbe_account" value="{{ old('cbe_account') }}"
-                                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 text-sm sm:text-base"
-                                                placeholder="Account Number" />
-                                            @error('cbe_account')
-                                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">Transaction Reference</label>
-                                            <input type="text" name="cbe_reference" value="{{ old('cbe_reference') }}"
-                                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200 text-sm sm:text-base"
-                                                placeholder="Reference Number" />
-                                            @error('cbe_reference')
-                                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
 
             <!-- Submit Button - Fixed at bottom on mobile -->
             <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 sm:relative sm:bottom-auto sm:left-auto sm:right-auto sm:bg-transparent sm:border-t-0 sm:p-0 z-50">
@@ -446,6 +184,49 @@
             }
         });
     </script>
+
+
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const submitBtn = document.getElementById('submitPayment');
+    submitBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Redirecting...';
+
+        const res = await fetch("{{ route('checkout.create', $batch->id) }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({})
+        });
+
+        if (!res.ok) {
+            alert('Failed to create checkout session');
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Complete Payment';
+            return;
+        }
+
+        const data = await res.json();
+        const stripe = Stripe("{{ config('services.stripe.key') }}");
+
+        const { error } = await stripe.redirectToCheckout({ sessionId: data.id });
+        if (error) {
+            console.error(error);
+            alert(error.message);
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Complete Payment';
+        }
+    });
+});
+</script>
+
 
     <style>
         .payment-card {
