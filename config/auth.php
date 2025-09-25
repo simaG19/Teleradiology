@@ -40,6 +40,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'uploader' => [
+        'driver'   => 'session',
+        'provider' => 'uploaders',
+    ],
     ],
 
     /*
@@ -64,6 +68,10 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
+        'uploaders' => [
+        'driver' => 'eloquent',
+        'model'  => App\Models\UploaderAccount::class,
+    ],
 
         // 'users' => [
         //     'driver' => 'database',
