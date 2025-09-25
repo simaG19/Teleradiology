@@ -12,6 +12,8 @@ use App\Models\Batch;
 use App\Models\MedicalImage;
 use App\Models\Report;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB; 
+
 
 
 use Illuminate\Support\Facades\Log;
@@ -30,40 +32,40 @@ public function index()
 {
     $readerId = Auth::id();
 
-    // load all assignments for this reader with eager relations
-    $all = Assignment::with(['image', 'hospitalUpload'])
-        ->where('assigned_to', $readerId)
-        ->orderByDesc('assigned_at')
-        ->get();
+    // Load all assignments with eager relations including uploaders
+    $all = Assignment::with([
+        'image.uploader', // Include image's uploader relation
+        'hospitalUpload.uploader' // Include hospitalUpload's uploader relation
+    ])
+    ->where('assigned_to', $readerId)
+    ->orderByDesc('assigned_at')
+    ->get();
 
     // Group assignments into "batches" (key = hospital_upload_id or image.batch_no)
     $grouped = $all->groupBy(function (Assignment $a) {
         if ($a->hospital_upload_id) {
             return 'hospital:'.$a->hospital_upload_id;
         }
-        // guard for null image
-        return 'batch:'.optional($a->image)->batch_no;
+        return 'batch:'.$a->batch_id;
     });
 
     // Map to items for view
     $items = $grouped->map(function (Collection $group, $key) {
-        // key like "hospital:UUID" or "batch:UUID"
         [$type, $id] = explode(':', $key, 2);
-
         $first = $group->first();
 
-        // compute display fields
         return (object)[
             'type' => $type === 'hospital' ? 'hospital' : 'batch',
-            'batch_id' => $id,                    // identifier to pass to routes
+            'batch_id' => $id,
+            'batch_no' => $id, // Add this for the route parameters
             'assigned_at' => $first->assigned_at ?? $first->created_at,
             'deadline' => $first->deadline,
             'status' => $first->status,
             'assignments_count' => $group->count(),
-            // optionally include uploader/email or sample image
-            'uploader_email' => optional($first->image)->uploader->email
-                                ?? optional($first->hospitalUpload)->uploader->email
-                                ?? null,
+            // Get the uploader object instead of just email
+            'uploader' => optional($first->image)->uploader 
+                         ?? optional($first->hospitalUpload)->uploader 
+                         ?? null,
         ];
     })->values();
 
@@ -71,7 +73,6 @@ public function index()
         'items' => $items,
     ]);
 }
-
     /**
      * Download ZIP for a given batch_no (customer batch id or hospital upload id).
      * Marks relevant assignments (for this reader) as in_progress before serving the zip.
@@ -135,11 +136,6 @@ public function index()
         return back()->withErrors(['download' => 'Batch not found.']);
     }
 
-
-
-
-// use statements at top of controller
-
 public function createReport(string $batch_no)
 {
     $readerId = Auth::id();
@@ -151,18 +147,19 @@ public function createReport(string $batch_no)
             ->where('assigned_to', $readerId)
             ->exists();
 
-        if (! $exists) {
-            // Log helpful debug info and show a clear error instead of silent redirect
-            dd('not assigned', $batch_no, $readerId);
+        // if (! $exists) {
+        //     // Log helpful debug info and show a clear error instead of silent redirect
+        //     dd('not assigned', $batch_no, $readerId);
 
-            return redirect()->route('reader.assignments.index')
-                ->withErrors(['batch_no' => 'You are not assigned to this hospital batch.']);
-        }
+        //     return redirect()->route('reader.assignments.index')
+        //         ->withErrors(['batch_no' => 'You are not assigned to this hospital batch.']);
+        // }
 
         // load any additional data for the view
         $fileType = $upload->fileType;
         return view('reader.assignments.report-create', [
             'batch_no' => $batch_no,
+            
             'type'     => 'hospital',
             'upload'   => $upload,
             'fileType' => $fileType,
@@ -176,12 +173,12 @@ public function createReport(string $batch_no)
         ->where('assignments.assigned_to', $readerId)
         ->exists();
 
-    if (! $exists) {
-         dd('not assigned', $batch_no, $readerId);
+    // if (! $exists) {
+    //      dd('not assigned', $batch_no, $readerId);
 
-        return redirect()->route('reader.assignments.index')
-            ->withErrors(['batch_no' => 'Invalid batch number or not assigned to you.']);
-    }
+    //     return redirect()->route('reader.assignments.index')
+    //         ->withErrors(['batch_no' => 'Invalid batch number or not assigned to you.']);
+    // }
 
     // Pass the list of images for the batch (reader will need them)
     $images = MedicalImage::where('batch_no', $batch_no)
@@ -196,7 +193,12 @@ public function createReport(string $batch_no)
 }
 
 
-public function storeReport(Request $request, $batch_no)
+
+
+// use statements at top of controller
+
+
+public function storeReport(Request $request, string $batch_no)
 {
     $request->validate([
         'report_text' => 'required|string',
@@ -205,22 +207,23 @@ public function storeReport(Request $request, $batch_no)
 
     $readerId = Auth::id();
 
-    // Find assignment ids for this reader & batch (covers customer-image batches)
-    $assignmentIds = Assignment::join('medical_images','assignments.image_id','=','medical_images.id')
-        ->where('medical_images.batch_no', $batch_no)
-        ->where('assignments.assigned_to', $readerId)
-        ->pluck('assignments.id')
-        ->toArray();
+    // 1) Find matching assignment IDs for this reader & batch
+    $assignmentIds = [];
 
-    // Also support hospital_upload assignments
-    if (empty($assignmentIds)) {
-        $hospitalUpload = \App\Models\HospitalUpload::find($batch_no);
-        if ($hospitalUpload) {
-            $assignmentIds = Assignment::where('hospital_upload_id', $hospitalUpload->id)
-                ->where('assigned_to', $readerId)
-                ->pluck('id')
-                ->toArray();
-        }
+    // Hospital-upload flow (hospital_upload_id present)
+    $hospitalUpload = HospitalUpload::find($batch_no);
+    if ($hospitalUpload) {
+        $assignmentIds = Assignment::where('hospital_upload_id', $hospitalUpload->id)
+            ->where('assigned_to', $readerId)
+            ->pluck('id')
+            ->toArray();
+    } else {
+        // Customer batch flow => assignments joined to medical_images by image_id
+        $assignmentIds = Assignment::join('medical_images', 'assignments.image_id', '=', 'medical_images.id')
+            ->where('medical_images.batch_no', $batch_no)
+            ->where('assignments.assigned_to', $readerId)
+            ->pluck('assignments.id')
+            ->toArray();
     }
 
     if (empty($assignmentIds)) {
@@ -228,30 +231,60 @@ public function storeReport(Request $request, $batch_no)
             'batch_no' => $batch_no,
             'reader_id' => $readerId,
         ]);
+
         return redirect()->route('reader.assignments.index')
-                         ->withErrors(['report' => 'No assignments found for this batch (or you are not assigned).']);
+                         ->withErrors(['report' => 'No assignments found for this batch or you are not assigned to it.']);
     }
 
-    foreach ($assignmentIds as $assignId) {
-        $report = \App\Models\Report::create([
-            'assignment_id' => $assignId,
-            'notes' => $request->input('report_text'),
+    // 2) Transactionally create reports and mark assignments done
+    DB::beginTransaction();
+    try {
+        foreach ($assignmentIds as $assignId) {
+            // create the DB row first (fillable must include assignment_id, notes)
+            $report = Report::create([
+                'assignment_id' => $assignId,
+                'notes' => $request->input('report_text'),
+                // 'pdf_path' left null for now; we'll set if upload exists
+            ]);
+
+            // defensive check — if creation failed, throw so we roll back
+            if (! $report) {
+                throw new \RuntimeException("Failed to create report row for assignment {$assignId}");
+            }
+
+            // store uploaded PDF to 'public' disk so it is accessible at /storage/...
+            if ($request->hasFile('report_pdf')) {
+                $file = $request->file('report_pdf');
+                $ext = $file->getClientOriginalExtension() ?: 'pdf';
+                $filename = "report_{$assignId}." . $ext;
+                $storedPath = $file->storeAs("reports/{$batch_no}", $filename, 'public'); // e.g. reports/{batch}/report_123.pdf
+
+                // update the report row with the stored path
+                $report->pdf_path = $storedPath;
+                $report->save();
+            }
+        }
+
+        // mark all these assignments completed/done
+        Assignment::whereIn('id', $assignmentIds)->update(['status' => 'done']);
+
+        DB::commit();
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        Log::error('storeReport failed', [
+            'batch_no' => $batch_no,
+            'reader_id' => $readerId,
+            'exception' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
         ]);
 
-        if ($request->hasFile('report_pdf')) {
-            $stored = $request->file('report_pdf')
-                            ->storeAs("reports/{$batch_no}", "report_{$assignId}.pdf", 'local');
-            $report->pdf_path = $stored;
-            $report->save();
-        }
+        return redirect()->route('reader.assignments.index')
+                         ->withErrors(['report' => 'Failed to save report. Check logs for details.']);
     }
 
-    // Mark assignments completed
-    Assignment::whereIn('id', $assignmentIds)->update(['status' => 'done']);
-
-    return redirect()->route('reader.assignments.index')->with('success','Report submitted successfully.');
+    return redirect()->route('reader.assignments.index')
+                     ->with('success', 'Report submitted successfully.');
 }
-
 
 
 }
