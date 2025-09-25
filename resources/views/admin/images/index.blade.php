@@ -29,6 +29,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Urgency</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type (Anatomy)</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Status</th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
                                 </tr>
                             </thead>
@@ -93,6 +94,14 @@
                                                 <span class="text-gray-500">TBD</span>
                                             @else
                                                 {{ number_format($batch->quoted_price, 2) }} birr
+                                            @endif
+                                        </td>
+
+                                         <<td class="px-6 py-4 text-sm">
+                                            @if(optional($batch)->paid === 0)
+                                                <span class="px-2 inline-flex text-xs font-semibold rounded-full bg-red-100 text-red-800">Unpaid</span>
+                                            @else
+                                                <span class="px-2 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">Paid</span>
                                             @endif
                                         </td>
 
