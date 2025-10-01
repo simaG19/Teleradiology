@@ -207,7 +207,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (!res.ok) {
-            alert('Failed to create checkout session');
+               const err = await res.json().catch(()=>({error: 'unknown'}));
+    alert('Failed to create checkout session: ' + (err.error || JSON.stringify(err)));
             submitBtn.disabled = false;
             submitBtn.innerText = 'Complete Payment';
             return;
