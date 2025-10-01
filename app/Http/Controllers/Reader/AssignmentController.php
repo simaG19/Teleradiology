@@ -198,6 +198,7 @@ public function createReport(string $batch_no)
 // use statements at top of controller
 
 
+
 public function storeReport(Request $request, string $batch_no)
 {
     $request->validate([
@@ -207,23 +208,45 @@ public function storeReport(Request $request, string $batch_no)
 
     $readerId = Auth::id();
 
-    // 1) Find matching assignment IDs for this reader & batch
+    Log::debug('=== STORE REPORT DEBUG ===', [
+        'batch_no' => $batch_no,
+        'reader_id' => $readerId,
+    ]);
+
+    // 1) Try hospital upload assignments (preferred check for UUID hospital uploads)
     $assignmentIds = [];
 
-    // Hospital-upload flow (hospital_upload_id present)
     $hospitalUpload = HospitalUpload::find($batch_no);
     if ($hospitalUpload) {
         $assignmentIds = Assignment::where('hospital_upload_id', $hospitalUpload->id)
             ->where('assigned_to', $readerId)
             ->pluck('id')
             ->toArray();
+
+        Log::debug('Hospital upload assignments for reader', ['assignment_ids' => $assignmentIds]);
     } else {
-        // Customer batch flow => assignments joined to medical_images by image_id
-        $assignmentIds = Assignment::join('medical_images', 'assignments.image_id', '=', 'medical_images.id')
-            ->where('medical_images.batch_no', $batch_no)
-            ->where('assignments.assigned_to', $readerId)
-            ->pluck('assignments.id')
-            ->toArray();
+        // 2) Try direct Batch model (customer batches stored in batches table)
+        $batch = Batch::find($batch_no);
+        if ($batch) {
+            // If your assignments were created with a batch_id column, use that
+            $assignmentIds = Assignment::where('batch_id', $batch->id)
+                ->where('assigned_to', $readerId)
+                ->pluck('id')
+                ->toArray();
+
+            Log::debug('Customer batch assignments (by batch_id) for reader', ['assignment_ids' => $assignmentIds]);
+        }
+
+        // 3) Fallback to legacy flow: join via medical_images.image_id -> assignments.image_id
+        if (empty($assignmentIds)) {
+            $assignmentIds = Assignment::join('medical_images', 'assignments.image_id', '=', 'medical_images.id')
+                ->where('medical_images.batch_no', $batch_no)
+                ->where('assignments.assigned_to', $readerId)
+                ->pluck('assignments.id')
+                ->toArray();
+
+            Log::debug('Customer batch assignments (legacy image join) for reader', ['assignment_ids' => $assignmentIds]);
+        }
     }
 
     if (empty($assignmentIds)) {
@@ -236,39 +259,43 @@ public function storeReport(Request $request, string $batch_no)
                          ->withErrors(['report' => 'No assignments found for this batch or you are not assigned to it.']);
     }
 
-    // 2) Transactionally create reports and mark assignments done
+    // 4) Save reports (one per assignment) inside a transaction
     DB::beginTransaction();
     try {
         foreach ($assignmentIds as $assignId) {
-            // create the DB row first (fillable must include assignment_id, notes)
-            $report = Report::create([
+            $reportData = [
                 'assignment_id' => $assignId,
                 'notes' => $request->input('report_text'),
-                // 'pdf_path' left null for now; we'll set if upload exists
-            ]);
+                'pdf_path' => null,
+            ];
 
-            // defensive check — if creation failed, throw so we roll back
-            if (! $report) {
-                throw new \RuntimeException("Failed to create report row for assignment {$assignId}");
-            }
-
-            // store uploaded PDF to 'public' disk so it is accessible at /storage/...
             if ($request->hasFile('report_pdf')) {
+                // store on the public disk so /storage/... is accessible
                 $file = $request->file('report_pdf');
                 $ext = $file->getClientOriginalExtension() ?: 'pdf';
                 $filename = "report_{$assignId}." . $ext;
-                $storedPath = $file->storeAs("reports/{$batch_no}", $filename, 'public'); // e.g. reports/{batch}/report_123.pdf
 
-                // update the report row with the stored path
-                $report->pdf_path = $storedPath;
-                $report->save();
+                // Use "public" disk; ensure `php artisan storage:link` was run
+                $storedPath = $file->storeAs("reports/{$batch_no}", $filename, 'public');
+
+                // store relative path (e.g. "reports/UUID/report_123.pdf")
+                $reportData['pdf_path'] = $storedPath;
+            }
+
+            $report = Report::create($reportData);
+
+            if (! $report) {
+                throw new \RuntimeException("Failed to create report row for assignment {$assignId}");
             }
         }
 
-        // mark all these assignments completed/done
+        // mark assignments completed
         Assignment::whereIn('id', $assignmentIds)->update(['status' => 'done']);
 
         DB::commit();
+
+        return redirect()->route('reader.assignments.index')
+                         ->with('success', 'Report submitted successfully.');
     } catch (\Throwable $e) {
         DB::rollBack();
         Log::error('storeReport failed', [
@@ -281,10 +308,6 @@ public function storeReport(Request $request, string $batch_no)
         return redirect()->route('reader.assignments.index')
                          ->withErrors(['report' => 'Failed to save report. Check logs for details.']);
     }
-
-    return redirect()->route('reader.assignments.index')
-                     ->with('success', 'Report submitted successfully.');
 }
-
 
 }
