@@ -53,22 +53,25 @@
                     {{ number_format($batch->quoted_price,2) }} birr
                   @endif
                 </td>
+               
                 <td class="px-6 py-4 text-sm text-gray-700">
-                  @php
-                    // find first assignment that has a report
-                    $report = $batch->assignments->first()?->report;
-                  @endphp
+  {{-- pull assignments->report from eager loaded relation --}}
+@php
+  // find first assignment that has a report
+  $report = $batch->assignments->first()?->report;
+@endphp
 
-                  @if($report)
-                    <a href="{{ Storage::url($report->pdf_path) }}"
-                       class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                       target="_blank">
-                      View Report
-                    </a>
-                  @else
-                    <span class="text-gray-500">—</span>
-                  @endif
-                </td>
+@if($report)
+  <a href="{{ Storage::url($report->pdf_path) }}"
+     class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+     target="_blank">
+    View Report
+  </a>
+@else
+  <span class="text-gray-500">—</span>
+@endif
+</td>
+
               </tr>
             @endforeach
           </tbody>
