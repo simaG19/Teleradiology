@@ -34,7 +34,7 @@
                    class="mt-1 block w-full border-gray-300 rounded-md"
                    value="{{ old('email') }}">
           </div>
-
+<!-- 
 <div class="mb-4">
   <label class="block text-sm font-medium">Monthly File Upload Limit</label>
   <input type="number" name="monthly_file_limit" min="0"
@@ -57,7 +57,7 @@
          class="mt-1 block w-full border-gray-300 rounded-md">
   <p class="text-xs text-gray-500">Set to $0 for no per-file billing.</p>
 </div>
-
+ -->
 
           <div class="mb-4">
             <label class="block text-sm font-medium">Password</label>
