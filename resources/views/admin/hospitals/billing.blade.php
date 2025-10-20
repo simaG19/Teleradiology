@@ -1,6 +1,6 @@
 <x-app-layout>
   <x-slot name="header">
-    <h2 class="text-xl font-semibold">Billing for {{ $user->name }} ({{ $start->format('F Y') }})</h2>
+    <h2 class="text-xl font-semibold">Billing for {{ $user->name }}</h2>
   </x-slot>
 
   <div class="py-8">
@@ -15,10 +15,7 @@
           <p class="text-lg">Rate per File:</p>
           <p class="text-2xl font-bold">${{ number_format($profile->billing_rate, 2) }}</p>
         </div>
-        <div>
-          <p class="text-lg">Amount Due:</p>
-          <p class="text-2xl font-bold">${{ number_format($bill, 2) }}</p>
-        </div>
+        
       </div>
 
       {{-- Detail Table --}}
