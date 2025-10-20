@@ -234,6 +234,14 @@ Route::middleware('auth:uploader')
          Route::post('uploads', [UploaderDashboardController::class, 'store'])
               ->name('uploads.store');
 
+          // routes/web.php (inside uploader route group)
+Route::get('uploads/{batch}/reports', [\App\Http\Controllers\Hospital\UploaderDashboardController::class, 'listReports'])
+     ->name('uploader.uploads.reports.index');
+
+Route::get('uploads/{batch}/reports/{report}', [\App\Http\Controllers\Hospital\UploaderDashboardController::class, 'downloadReport'])
+     ->name('uploader.uploads.reports.download');
+
+
          // View single upload + report
          Route::get('uploads/{image}', [UploaderDashboardController::class, 'show'])
               ->name('uploads.show');
