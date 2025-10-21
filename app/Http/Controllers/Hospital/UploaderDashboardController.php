@@ -30,6 +30,10 @@ use App\Models\FileType;
 use App\Models\HospitalProfile;
 
 
+
+use Illuminate\Support\Collection;
+
+
 use App\Models\Report;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -109,19 +113,40 @@ public function downloadReport(string $batch, Report $report)
 }
 
     /** GET /uploader/dashboard */
-   public function index()
-    {
-        $uploader = Auth::guard('uploader')->user();
+  // app/Http/Controllers/Hospital/UploaderDashboardController.php
 
-        // Fetch all “batch” uploads, not individual images:
-        $batches = HospitalUpload::with(['fileType','assignments.report'])
-                         ->where('uploader_id', $uploader->id)
-                         ->orderByDesc('created_at')
-                         ->get();
+// app/Http/Controllers/Hospital/UploaderDashboardController.php
 
-        // Pass $batches (not $images) into the view:
-        return view('hospital.uploaders.dashboard', compact('batches'));
-    }
+
+public function index()
+{
+    $uploader = Auth::guard('uploader')->user();
+
+    // eager-load assignments (and their report) and fileType
+    $batches = HospitalUpload::with(['fileType', 'assignments']) // don't rely on assignments.report here
+                 ->where('uploader_id', $uploader->id)
+                 ->orderByDesc('created_at')
+                 ->get();
+
+    // Build a map batch_id => first report (prefer the newest)
+    $reportsMap = $batches->mapWithKeys(function (HospitalUpload $batch) {
+        // collect assignment ids for this hospital upload
+        $assignmentIds = $batch->assignments->pluck('id')->filter()->values()->all();
+
+        if (! empty($assignmentIds)) {
+            // Query Report table once for these assignments, newest first
+            $report = Report::whereIn('assignment_id', $assignmentIds)
+                            ->orderByDesc('created_at')
+                            ->first();
+            return [$batch->id => $report];
+        }
+
+        // no assignments -> no report
+        return [$batch->id => null];
+    });
+
+    return view('hospital.uploaders.dashboard', compact('batches', 'reportsMap'));
+}
 
     /** GET /uploader/uploads/create */
     public function create()
