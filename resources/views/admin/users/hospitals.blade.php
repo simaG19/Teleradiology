@@ -45,8 +45,8 @@
                     @endif
                   </td> --}}
                   <td class="px-6 py-4 space-x-2 whitespace-nowrap">
-                    <a href="{{ route('admin.hospitals.show', $hospital) }}"
-                       class="px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700">View</a>
+                    {{-- <a href="{{ route('admin.hospitals.show', $hospital) }}"
+                       class="px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700">View</a> --}}
 
                     <a href="{{ route('admin.hospitals.edit', $hospital) }}"
                        class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Edit</a>
