@@ -23,7 +23,7 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            @foreach($batches as $batch)
+           @foreach($batches as $batch)
               <tr>
                 <td class="px-6 py-4 text-sm text-gray-700">{{ $batch->id }}</td>
                 <td class="px-6 py-4 text-sm text-gray-700">
@@ -54,24 +54,32 @@
                   @endif
                 </td>
                
-                <td class="px-6 py-4 text-sm text-gray-700">
-  {{-- pull assignments->report from eager loaded relation --}}
-@php
-  // find first assignment that has a report
-  $report = $batch->assignments->first()?->report;
-@endphp
+<td class="px-6 py-4 text-sm text-gray-700">
+    @php
+      $report = $reportsMap->get($batch->id); // may be null
+    @endphp
 
-@if($report)
-  <a href="{{ Storage::url($report->pdf_path) }}"
-     class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-     target="_blank">
-    View Report
-  </a>
-@else
-  <span class="text-gray-500">—</span>
-@endif
-</td>
-
+    @if($report)
+      @if(!empty($report->pdf_path))
+        <a href="{{ Storage::url($report->pdf_path) }}"
+           class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+           target="_blank" rel="noopener">
+          View PDF Report
+        </a>
+      @else
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-sm text-gray-700 mb-2">{{ \Illuminate\Support\Str::limit($report->notes, 100) }}</p>
+          <button
+            onclick="showReportModal({{ json_encode($report->notes) }})"
+            class="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline">
+            Read full notes →
+          </button>
+        </div>
+      @endif
+    @else
+      <span class="text-gray-500">—</span>
+    @endif
+  </td>
               </tr>
             @endforeach
           </tbody>
