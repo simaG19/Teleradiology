@@ -1,63 +1,62 @@
-A lightweight teleradiology web app for receiving DICOM batches, assigning them to readers, and delivering diagnostic reports. Built with Laravel + Blade + Tailwind; designed for hospitals, clients and radiologists.
+# Teleradiology Platform
 
-Key features
+A lightweight teleradiology web app for receiving DICOM ZIPs, assigning them to radiologists, and delivering diagnostic reports. Built with **Laravel**, **Blade**, and **Tailwind CSS**.
 
-Upload DICOM ZIPs (hospital uploaders & customers) and store as batches.
+## Quick summary
+- Upload DICOM ZIPs (customers & hospital uploaders) as batches.
+- Admin sets prices (based on file type), confirms batches and assigns them to readers.
+- Readers download batches, create text/pdf reports.
+- File types CRUD (name, anatomy, price_per_file).
+- Hospital billing and per-upload quoting.
+- Roles & permissions via **spatie/laravel-permission**.
 
-Admin quoting: set price per batch (based on file type) and confirm before payment.
+---
 
-Simple payment form (local + card UI placeholder) — no payment gateway logic included.
+## Features
+- Batch uploads (ZIP), stored as `Batch` / `HospitalUpload`.
+- Admin quoting & confirmation.
+- Assignment workflow (admin → reader).
+- Report creation (notes + optional PDF) per assignment.
+- File types management (type name, anatomy, price per file).
+- Hospital billing aggregation.
+- Tailwind + Blade UI; minimal frontend animations optional.
 
-Assignment workflow: admin assigns batches to readers; readers download ZIPs, create PDF/text reports.
+---
 
-Reports saved and downloadable (PDF or notes).
+## Prerequisites
+- PHP >= 8.1 (match your project)
+- MySQL (or other configured DB)
+- Composer
+- Node.js + npm/yarn (if you build frontend assets)
+- `zip` PHP extension (for `\ZipArchive`) — enable `extension=zip` in `php.ini`
+- Run `php artisan storage:link` to expose public storage (reports)
 
-File types CRUD: admin manages study types (e.g. X-ray, CT) with price_per_file and anatomy.
+---
 
-Hospital billing: aggregates uploads and totals for hospital profiles.
+## Install & run (local)
+```bash
+# clone & cd
+git clone <your-repo-url>
+cd <your-repo-dir>
 
-Roles & access control powered by Spatie permissions.
+# install php deps
+composer install
 
-User roles
+# install js deps (optional, for Tailwind)
+npm install
+# build assets (optional)
+npm run dev
 
-Admin / Super-admin — manage users, hospitals, file types, batches, assignments, view reports and billing.
+# copy env and set DB + app key
+cp .env.example .env
+# edit .env to configure DB, mail, etc.
+php artisan key:generate
 
-Reader — assigned batches, download ZIPs, create and submit reports.
+# run migrations
+php artisan migrate
 
-Customer — upload DICOM ZIPs, view quotes and reports, pay (via form).
+# make storage link so reports are accessible via /storage/...
+php artisan storage:link
 
-Hospital uploader — upload on behalf of a hospital; hospital billing updated when uploads occur.
-
-Data model (high level)
-
-Batch / HospitalUpload — represents an uploaded ZIP (batch id, uploader, urgency, file type, quoted_price, archive_path, status, confirmed).
-
-MedicalImage — legacy/per-file records (optional, depending on flow).
-
-Assignment — connects images / batches / hospital_uploads to a reader, with status and deadline.
-
-Report — notes + optional PDF, linked to an assignment.
-
-FileType — study type name, anatomy, price_per_file.
-
-Security & notes
-
-Authentication: Laravel auth guards (separate guard for hospital uploaders).
-
-Authorization: Spatie roles & permissions.
-
-File storage: uses Laravel disks (local/public); run php artisan storage:link for public report access.
-
-DICOM handling: uploads stored as ZIPs; no DICOM parsing included.
-
-Payment: form-only; integrate your preferred gateway (Stripe, M-Pesa, local) as needed.
-
-Quick start
-
-Clone repo, copy .env, set DB and storage.
-
-composer install && php artisan migrate && php artisan storage:link
-
-Seed roles/users or create via tinker.
-
-Run: php artisan serve.
+# run local server
+php artisan serve
