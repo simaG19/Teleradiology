@@ -54,32 +54,7 @@
 </div>
 
           {{-- Monthly File Upload Limit --}}
-          <div class="mb-4">
-            <label class="block text-sm font-medium">Monthly File Upload Limit</label>
-            <input type="number" name="monthly_file_limit" min="0"
-                   class="mt-1 block w-full border-gray-300 rounded-md"
-                   value="{{ old('monthly_file_limit', $profile->monthly_file_limit) }}">
-            <p class="text-xs text-gray-500">0 = unlimited</p>
-          </div>
-
-          {{-- Uploader Accounts Limit --}}
-          <div class="mb-4">
-            <label class="block text-sm font-medium">Uploader Accounts Limit</label>
-            <input type="number" name="uploader_account_limit" min="0"
-                   class="mt-1 block w-full border-gray-300 rounded-md"
-                   value="{{ old('uploader_account_limit', $profile->uploader_account_limit) }}">
-            <p class="text-xs text-gray-500">0 = unlimited</p>
-          </div>
-
-          {{-- Billing Rate --}}
-          <div class="mb-4">
-            <label class="block text-sm font-medium">Billing Rate (per file)</label>
-            <input type="number" name="billing_rate" step="0.01" min="0"
-                   class="mt-1 block w-full border-gray-300 rounded-md"
-                   value="{{ old('billing_rate', $profile->billing_rate) }}">
-            <p class="text-xs text-gray-500">Set to 0 for no per-file billing</p>
-          </div>
-
+    
           <div class="flex justify-end">
             <button type="submit"
                     class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
