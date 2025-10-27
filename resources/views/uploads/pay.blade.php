@@ -71,6 +71,49 @@
 
             </div>
 
+<!-- Payment Methods -->
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+    <h4 class="text-sm font-semibold text-gray-700 mb-3">Select payment method</h4>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Stripe / Card -->
+        <label class="payment-option block cursor-pointer" data-method="card_payment">
+            <input type="radio" name="payment_method" value="stripe" class="sr-only" checked>
+            <div class="payment-card border border-gray-200 rounded-xl p-4 flex items-center space-x-4">
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h5 class="font-semibold text-gray-800">Pay with Card (Stripe)</h5>
+                            <p class="text-xs text-gray-500">Secure card payment via Stripe</p>
+                        </div>
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/47/Stripe_Logo%2C_revised_2016.png" alt="Stripe" class="h-8 opacity-80">
+                    </div>
+                </div>
+            </div>
+        </label>
+
+        <!-- Chapa -->
+        <label class="payment-option block cursor-pointer" data-method="chapa">
+            <input type="radio" name="payment_method" value="chapa" class="sr-only">
+            <div class="payment-card border border-gray-200 rounded-xl p-4 flex items-center space-x-4">
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h5 class="font-semibold text-gray-800">Pay with Chapa</h5>
+                            <p class="text-xs text-gray-500">Use Chapa (cards/telebirr/other methods)</p>
+                        </div>
+                        <img src="https://www.google.com/imgres?q=chapa&imgurl=https%3A%2F%2Fassets.chapa.co%2Fassets%2Fimages%2Fchapa-logo.svg&imgrefurl=https%3A%2F%2Fgithub.com%2FChapa-Et%2Fchapa-laravel&docid=mOuVcIcldJD_LM&tbnid=AiY9pdB_vtFQLM&vet=12ahUKEwjWttLwi8SQAxW9RkEAHREaEO8QM3oECBsQAA..i&w=800&h=302&hcb=2&ved=2ahUKEwjWttLwi8SQAxW9RkEAHREaEO8QM3oECBsQAA" alt="Chapa" class="h-8 opacity-90">
+                    </div>
+                </div>
+            </div>
+        </label>
+    </div>
+
+    <!-- Hidden inputs with data the JS will use -->
+    <input type="hidden" id="batchAmount" value="{{ $batch->fileType->price_per_file }}">
+    <input type="hidden" id="batchId" value="{{ $batch->id }}">
+    <input type="hidden" id="userEmail" value="simonwubs19@gmail.com">
+</div>
 
 
             <!-- Submit Button - Fixed at bottom on mobile -->
@@ -191,11 +234,10 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submitPayment');
-    submitBtn.addEventListener('click', async function(e) {
-        e.preventDefault();
 
+    async function handleStripeFlow() {
         submitBtn.disabled = true;
-        submitBtn.innerText = 'Redirecting...';
+        submitBtn.innerText = 'Redirecting to Stripe...';
 
         const res = await fetch("{{ route('checkout.create', $batch->id) }}", {
             method: 'POST',
@@ -207,8 +249,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (!res.ok) {
-               const err = await res.json().catch(()=>({error: 'unknown'}));
-    alert('Failed to create checkout session: ' + (err.error || JSON.stringify(err)));
+            const err = await res.json().catch(()=>({error: 'unknown'}));
+            alert('Failed to create checkout session: ' + (err.error || JSON.stringify(err)));
             submitBtn.disabled = false;
             submitBtn.innerText = 'Complete Payment';
             return;
@@ -223,6 +265,79 @@ document.addEventListener('DOMContentLoaded', function() {
             alert(error.message);
             submitBtn.disabled = false;
             submitBtn.innerText = 'Complete Payment';
+        }
+    }
+
+   async function handleChapaFlow() {
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Redirecting to Chapa...';
+
+    // Use route() so URL is correct
+    const url = "{{ route('chapa.pay', $batch->id) }}";
+
+    const email = (document.getElementById('userEmail')?.value || '').trim();
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            credentials: 'same-origin',   // <= important: include cookies/session
+            body: JSON.stringify({ email })
+        });
+
+        // Read text first (works for JSON or HTML)
+        const text = await res.text();
+
+        // try to parse JSON if possible
+        let data;
+        try { data = JSON.parse(text); } catch(e) { data = null; }
+
+        if (!res.ok) {
+            // show as much information as possible to developer/user
+            console.error('Chapa init failed', res.status, text);
+            const msg = (data && (data.error || data.message)) ? JSON.stringify(data) : text;
+            alert('Failed to initialize Chapa payment: ' + (msg || ('HTTP ' + res.status)));
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Complete Payment';
+            return;
+        }
+
+        // success: parsed JSON expected
+        if (data && data.checkout_url) {
+            window.location.href = data.checkout_url;
+            return;
+        }
+
+        // No checkout_url found (unexpected)
+        console.error('Chapa init unexpected response', text);
+        alert('Chapa did not return a checkout URL. See console for details.');
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Complete Payment';
+    } catch (err) {
+        console.error('Network or JS error initializing Chapa', err);
+        alert('Failed to initialize Chapa payment: ' + (err.message || 'network error'));
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Complete Payment';
+    }
+}
+
+
+    submitBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+
+        // determine selected payment method
+        const selected = document.querySelector('input[name="payment_method"]:checked');
+        const method = selected ? selected.value : 'stripe';
+
+        if (method === 'stripe') {
+            await handleStripeFlow();
+        } else if (method === 'chapa') {
+            await handleChapaFlow();
+        } else {
+            alert('Unknown payment method selected.');
         }
     });
 });
