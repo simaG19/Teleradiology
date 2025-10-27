@@ -11,6 +11,7 @@ class Batch extends Model
        protected $fillable = [
       'id',
       'paid',
+      'tx_ref',
       'uploader_id',
       'urgency',
       'clinical_history',
