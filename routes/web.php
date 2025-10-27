@@ -15,6 +15,29 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\MedicalImageController as AdminMedicalImageController;
 
 
+
+
+use App\Http\Controllers\ChapaController;
+
+
+Route::get('/', function(){ return view('welcome'); });
+
+
+
+
+Route::post('/chapa/pay/{batch}', [ChapaController::class, 'initializeForBatch'])->name('chapa.pay');
+Route::get('/chapa/callback/{id}', [ChapaController::class, 'callback'])->name('chapa.callback');
+Route::get('/chapa/success/{batch}', [ChapaController::class, 'success'])->name('chapa.success');
+Route::get('/chapa/cancel', [ChapaController::class, 'cancel'])->name('chapa.cancel');
+
+
+
+
+
+
+
+
+
 Route::get('/', function () {
     return view('welcome');
 });
