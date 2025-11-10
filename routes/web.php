@@ -47,6 +47,12 @@ Route::get('/dashboard', function () {
     if (Auth::check() && Auth::user()->hasRole('customer')) {
         return redirect()->route('uploads.create');
     }
+     if (Auth::check() && Auth::user()->hasRole('admin')) {
+        return redirect()->route('admin.images.index');
+    }
+     if (Auth::check() && Auth::user()->hasRole('hospital')) {
+        return redirect()->route('hospital.dashboard');
+    }
     return view('dashboard'); // or redirect elsewhere for other roles
 })->middleware(['auth', 'verified'])->name('dashboard');
 
