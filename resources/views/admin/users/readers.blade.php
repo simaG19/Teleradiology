@@ -1,5 +1,5 @@
 {{-- resources/views/admin/users/readers.blade.php --}}
-</x-admin-lay>
+<x-admin-lay>
     <x-slot name="header">
         <h2 class="text-xl font-semibold">Readers</h2>
     </x-slot>

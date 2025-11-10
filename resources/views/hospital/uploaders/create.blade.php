@@ -1,5 +1,5 @@
 {{-- resources/views/hospital/uploaders/create.blade.php --}}
-<x-app-layout>
+<x-ho-lay>
   <x-slot name="header">
     <h2 class="text-xl font-semibold">Create New Uploader</h2>
   </x-slot>
@@ -60,4 +60,4 @@
       </div>
     </div>
   </div>
-</x-app-layout>
+<x-ho-lay>
