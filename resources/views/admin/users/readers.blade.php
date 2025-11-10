@@ -1,5 +1,5 @@
 {{-- resources/views/admin/users/readers.blade.php --}}
-<x-app-layout>
+</x-admin-lay>
     <x-slot name="header">
         <h2 class="text-xl font-semibold">Readers</h2>
     </x-slot>
@@ -92,4 +92,4 @@
             @endif
         </main>
     </div>
-</x-app-layout>
+</x-admin-lay>

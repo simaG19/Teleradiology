@@ -1,5 +1,5 @@
 {{-- resources/views/admin/images/assign.blade.php --}}
-<x-app-layout>
+<x-admin-lay>
   <x-slot name="header">
     <h2 class="text-xl font-semibold">Assign Reader</h2>
   </x-slot>
@@ -52,4 +52,4 @@
       @endif
     </div>
   </div>
-</x-app-layout>
+</x-admin-lay>

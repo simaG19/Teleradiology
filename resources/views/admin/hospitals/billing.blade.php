@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-admin-lay>
   <x-slot name="header">
     <h2 class="text-xl font-semibold">Billing for {{ $user->name }}</h2>
   </x-slot>
@@ -78,4 +78,4 @@
 
     </div>
   </div>
-</x-app-layout>
+</x-admin-lay>

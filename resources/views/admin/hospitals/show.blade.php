@@ -1,4 +1,4 @@
-<x-app-layout>
+</x-admin-lay>
   <x-slot name="header">
     <h2>Hospital: {{ $user->name }}</h2>
   </x-slot>
@@ -10,4 +10,4 @@
     <p><strong>Billing Rate:</strong> ${{ number_format($profile->billing_rate,2) }} per file</p>
     <!-- any other profile fields -->
   </div>
-</x-app-layout>
+</x-admin-lay>

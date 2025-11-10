@@ -1,5 +1,5 @@
 {{-- resources/views/admin/users/clients.blade.php --}}
-<x-app-layout>
+<x-admin-lay>
     <x-slot name="header">
         <h2 class="text-xl font-semibold">Clients</h2>
     </x-slot>
@@ -47,4 +47,4 @@
             @endif
         </main>
     </div>
-</x-app-layout>
+</x-admin-lay>

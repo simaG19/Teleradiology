@@ -1,5 +1,5 @@
 {{-- resources/views/admin/batches/index.blade.php --}}
-<x-app-layout>
+<x-admin-lay>
   <x-slot name="header">
     <div class="flex items-center justify-between">
       <h2 class="text-xl font-semibold">All Batches</h2>
@@ -105,4 +105,4 @@
       </div>
     </main>
   </div>
-</x-app-layout>
+</x-admin-lay>
