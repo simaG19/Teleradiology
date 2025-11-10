@@ -40,11 +40,16 @@ Route::get('/chapa/cancel', [ChapaController::class, 'cancel'])->name('chapa.can
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
 
+// In routes/web.php
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    if (Auth::check() && Auth::user()->hasRole('customer')) {
+        return redirect()->route('uploads.create');
+    }
+    return view('dashboard'); // or redirect elsewhere for other roles
 })->middleware(['auth', 'verified'])->name('dashboard');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
