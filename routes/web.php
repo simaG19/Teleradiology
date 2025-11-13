@@ -233,9 +233,10 @@ Route::middleware(['auth', 'role:hospital'])
 
 
 
- use App\Http\Controllers\Hospital\UploaderAuthController;
+use App\Http\Controllers\Hospital\UploaderAuthController;
+use App\Http\Controllers\Hospital\UploaderDashboardController;
 
-// Uploader auth
+// Uploader auth routes (public - no auth middleware)
 Route::prefix('uploader')->name('uploader.')->group(function(){
     // Show login form
     Route::get('login', [UploaderAuthController::class, 'showLoginForm'])
@@ -243,45 +244,34 @@ Route::prefix('uploader')->name('uploader.')->group(function(){
     // Handle login
     Route::post('login', [UploaderAuthController::class, 'login'])
          ->name('login.submit');
+});
+
+// Uploader protected routes (require auth:uploader middleware)
+Route::middleware('auth:uploader')->prefix('uploader')->name('uploader.')->group(function(){
     // Logout
     Route::post('logout', [UploaderAuthController::class, 'logout'])
          ->name('logout');
+
+    // Dashboard = list of uploads
+    Route::get('dashboard', [UploaderDashboardController::class, 'index'])
+         ->name('dashboard');
+
+    // New upload
+    Route::get('uploads/create', [UploaderDashboardController::class, 'create'])
+         ->name('uploads.create');
+    Route::post('uploads', [UploaderDashboardController::class, 'store'])
+         ->name('uploads.store');
+
+    // Reports
+    Route::get('uploads/{batch}/reports', [UploaderDashboardController::class, 'listReports'])
+         ->name('uploads.reports.index');
+    Route::get('uploads/{batch}/reports/{report}', [UploaderDashboardController::class, 'downloadReport'])
+         ->name('uploads.reports.download');
+
+    // View single upload + report
+    Route::get('uploads/{image}', [UploaderDashboardController::class, 'show'])
+         ->name('uploads.show');
 });
-
-
-
-
-
-use App\Http\Controllers\Hospital\UploaderDashboardController;
-
-Route::middleware('auth:uploader')
-     ->prefix('uploader')
-     ->name('uploader.')
-     ->group(function(){
-         // Dashboard = list of uploads
-         Route::get('dashboard', [UploaderDashboardController::class, 'index'])
-              ->name('dashboard');
-
-         // New upload
-         Route::get('uploads/create', [UploaderDashboardController::class, 'create'])
-              ->name('uploads.create');
-         Route::post('uploads', [UploaderDashboardController::class, 'store'])
-              ->name('uploads.store');
-
-          // routes/web.php (inside uploader route group)
-Route::get('uploads/{batch}/reports', [\App\Http\Controllers\Hospital\UploaderDashboardController::class, 'listReports'])
-     ->name('uploader.uploads.reports.index');
-
-Route::get('uploads/{batch}/reports/{report}', [\App\Http\Controllers\Hospital\UploaderDashboardController::class, 'downloadReport'])
-     ->name('uploader.uploads.reports.download');
-
-
-         // View single upload + report
-         Route::get('uploads/{image}', [UploaderDashboardController::class, 'show'])
-              ->name('uploads.show');
-     });
-
-
 
 
 
