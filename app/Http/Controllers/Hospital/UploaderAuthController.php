@@ -12,28 +12,32 @@ class UploaderAuthController extends Controller
 
     public function showLoginForm()
     {
+        // Clear any previous intended URLs to prevent redirect to default login
+        session()->forget('url.intended');
         return view('hospital.uploaders.login');
     }
 
-   public function login(Request $request)
-{
-    $credentials = $request->validate([
-        'email'    => 'required|email',
-        'password' => 'required|string',
-    ]);
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required|string',
+        ]);
 
-    if (Auth::guard($this->guard)->attempt($credentials, $request->boolean('remember'))) {
-        $request->session()->regenerate();
+        // Clear intended URL before authentication
+        session()->forget('url.intended');
 
-        // Instead of route('uploads.create'), send them to uploader.dashboard:
-        return redirect()->intended(route('uploader.dashboard'));
+        if (Auth::guard($this->guard)->attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+
+            // Use explicit redirect instead of intended()
+            return redirect()->route('uploader.dashboard');
+        }
+
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
     }
-
-    return back()->withErrors([
-        'email' => 'The provided credentials do not match our records.',
-    ])->onlyInput('email');
-}
-
 
     public function logout(Request $request)
     {
