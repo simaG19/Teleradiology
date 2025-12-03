@@ -79,73 +79,135 @@ public function callback(Request $request, $id)
 {
     $batch = Batch::findOrFail($id);
 
-    // Try to find tx/ref from batch or request (handle various key names)
+    // Get transaction reference from various possible sources
     $txRef = $batch->tx_ref
-        ?? $request->get('tx_ref')
-        ?? $request->get('trx_ref')
-        ?? $request->query('trx_ref')
+        ?? $request->input('tx_ref')
+        ?? $request->input('trx_ref')
         ?? $request->query('tx_ref')
-        ?? $request->get('trxref')
-        ?? $request->get('reference')
+        ?? $request->query('trx_ref')
+        ?? $request->input('reference')
         ?? null;
 
-    Log::info("Chapa callback invoked for batch {$batch->id}", [
-        'tx_ref_from_batch' => $batch->tx_ref,
-        'tx_ref_from_request' => $request->get('tx_ref'),
-        'trx_ref_from_request' => $request->get('trx_ref'),
-        'all_query' => $request->query(),
-        'all_input' => $request->all(),
+    Log::info('Chapa callback received', [
+        'batch_id' => $batch->id,
+        'tx_ref' => $txRef,
+        'request_data' => $request->all()
     ]);
 
     if (!$txRef) {
-        Log::warning("Chapa callback missing tx_ref for batch {$batch->id}");
+        Log::error('No transaction reference found', ['request' => $request->all()]);
         return response()->json(['error' => 'Missing transaction reference'], 400);
     }
 
     try {
-        $verifyUrl = "{$this->base}/transaction/verify/{$txRef}";
-        $res = Http::withToken($this->secretKey())->get($verifyUrl);
+        // Verify transaction with Chapa
+        $verifyUrl = $this->base . "/transaction/verify/{$txRef}";
+        $response = Http::withToken($this->secretKey())
+            ->timeout(30)
+            ->get($verifyUrl);
 
-        Log::info('Chapa verify status: ' . $res->status());
-        Log::info('Chapa verify response: ' . $res->body());
+        $data = $response->json();
 
-        if (!$res->ok()) {
-            Log::warning('Chapa verification HTTP error', ['status' => $res->status(), 'body' => $res->body()]);
-            return response()->json(['error' => 'Verification failed', 'body' => $res->json()], 500);
+        if ($response->failed()) {
+            Log::error('Chapa verification failed', [
+                'status' => $response->status(),
+                'response' => $data
+            ]);
+            return response()->json(['error' => 'Verification failed'], 500);
         }
 
-        $data = $res->json();
-        $status = data_get($data, 'data.status') ?? data_get($data, 'status');
+        // Check transaction status
+        $status = strtolower($data['data']['status'] ?? $data['status'] ?? '');
 
-        $normalized = is_string($status) ? strtolower($status) : $status;
-        Log::info('Chapa verify parsed status', ['status' => $status, 'normalized' => $normalized]);
+        $successStatuses = ['success', 'successful', 'paid', 'complete', 'completed'];
 
-        if ($normalized === 'success' || $normalized === 'successful' || $normalized === 'paid') {
-            // Persist tx_ref if missing and mark paid
-            $batch->tx_ref = $txRef;
-            $batch->paid = true;
-            $saved = $batch->save();
+        if (in_array($status, $successStatuses)) {
+            // Update batch status
+            $batch->update([
+                'paid' => true,
+                'tx_ref' => $txRef,
+                'payment_gateway' => 'chapa',
+                'payment_verified_at' => now(),
+            ]);
 
-            Log::info('Batch update', ['batch_id' => $batch->id, 'saved' => $saved, 'paid' => $batch->paid]);
+            Log::info('Batch payment status updated', [
+                'batch_id' => $batch->id,
+                'status' => $status,
+                'tx_ref' => $txRef
+            ]);
 
-            return redirect()->route('chapa.success', $batch->id);
+            // Return success response (Chapa expects 200 OK)
+            return response()->json(['status' => 'success', 'message' => 'Payment verified']);
+        } else {
+            Log::warning('Chapa transaction not successful', [
+                'status' => $status,
+                'data' => $data
+            ]);
+            return response()->json(['status' => 'failed', 'message' => 'Payment not successful'], 400);
         }
 
-        Log::info('Chapa transaction not successful', ['status' => $status]);
-        return redirect()->route('chapa.cancel');
-    } catch (\Throwable $e) {
-        Log::error('Chapa verify error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-        return redirect()->route('chapa.cancel');
+    } catch (\Exception $e) {
+        Log::error('Chapa callback error: ' . $e->getMessage(), [
+            'batch_id' => $batch->id,
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json(['error' => 'Server error'], 500);
     }
 }
 
 
 
     // === STEP 3: Success Page ===
-    public function success(Batch $batch)
-    {
+    // public function success(Batch $batch)
+    // {
+    //     return view('uploads.success', compact('batch'));
+    // }
+
+    public function success(Request $request, $id)
+{
+    $batch = Batch::findOrFail($id);
+
+    // If already paid, just show success
+    if ($batch->paid) {
         return view('uploads.success', compact('batch'));
     }
+
+    // Get transaction reference
+    $txRef = $batch->tx_ref
+        ?? $request->input('tx_ref')
+        ?? $request->input('trx_ref')
+        ?? $request->query('tx_ref')
+        ?? $request->query('trx_ref')
+        ?? null;
+
+    if ($txRef) {
+        try {
+            // Verify payment
+            $verifyUrl = $this->base . "/transaction/verify/{$txRef}";
+            $response = Http::withToken($this->secretKey())->get($verifyUrl);
+
+            if ($response->ok()) {
+                $data = $response->json();
+                $status = strtolower($data['data']['status'] ?? $data['status'] ?? '');
+
+                $successStatuses = ['success', 'successful', 'paid'];
+
+                if (in_array($status, $successStatuses)) {
+                    $batch->update([
+                        'paid' => true,
+                        'tx_ref' => $txRef,
+                        'payment_gateway' => 'chapa',
+                        'payment_verified_at' => now(),
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Chapa success verification failed: ' . $e->getMessage());
+        }
+    }
+
+    return view('uploads.success', compact('batch'));
+}
 
     // === STEP 4: Cancel Page ===
     public function cancel()
