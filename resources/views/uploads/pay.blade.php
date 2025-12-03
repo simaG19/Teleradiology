@@ -112,7 +112,7 @@
     <!-- Hidden inputs with data the JS will use -->
     <input type="hidden" id="batchAmount" value="{{ $batch->fileType->price_per_file }}">
     <input type="hidden" id="batchId" value="{{ $batch->id }}">
-    <input type="hidden" id="userEmail" value="simonwubs19@gmail.com">
+    <input type="hidden" id="userEmail" value="{{$user->email}}">
 </div>
 
 
