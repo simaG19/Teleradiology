@@ -106,19 +106,27 @@
                                         </td>
 
                                         {{-- Actions --}}
-                                        <td class="px-6 py-4 text-center text-sm font-medium space-x-2">
-                                            {{-- Assign (go to assign form) --}}
-                                            <a href="{{ route('admin.assign.reader', ['batch_no' => $batch->id]) }}"
-                                               class="inline-flex items-center px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                                                Assign
-                                            </a>
+                                      {{-- Actions --}}
+<td class="px-6 py-4 text-center text-sm font-medium space-x-2">
+    {{-- Conditional Assign/Reassign Button --}}
+    @if(is_null($batch->status) || $batch->status !== 'assigned')
+        <a href="{{ route('admin.assign.reader', ['batch_no' => $batch->id]) }}"
+           class="inline-flex items-center px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+            Assign
+        </a>
+    @elseif($batch->status === 'assigned')
+        <a href="{{ route('admin.assign.reader', ['batch_no' => $batch->id]) }}"
+           class="inline-flex items-center px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700">
+            Reassign
+        </a>
+    @endif
 
-                                            {{-- Download ZIP (batches controller) --}}
-                                            <a href="{{ route('admin.batches.download', $batch) }}"
-                                               class="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
-                                                Download
-                                            </a>
-                                        </td>
+    {{-- Download ZIP (batches controller) --}}
+    <a href="{{ route('admin.batches.download', $batch) }}"
+       class="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+        Download
+    </a>
+</td>
                                     </tr>
                                 @endforeach
                             </tbody>
