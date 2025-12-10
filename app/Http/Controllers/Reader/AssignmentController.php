@@ -12,9 +12,10 @@ use App\Models\Batch;
 use App\Models\MedicalImage;
 use App\Models\Report;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\DB;
 
 
+use Illuminate\Support\Carbon;
 
 use Illuminate\Support\Facades\Log;
 
@@ -28,20 +29,19 @@ class AssignmentController extends Controller
      * Show assigned batches (grouped).
      */
 
+
 public function index()
 {
     $readerId = Auth::id();
 
-    // Load all assignments with eager relations including uploaders
     $all = Assignment::with([
-        'image.uploader', // Include image's uploader relation
-        'hospitalUpload.uploader' // Include hospitalUpload's uploader relation
+        'image.uploader',
+        'hospitalUpload.uploader'
     ])
     ->where('assigned_to', $readerId)
     ->orderByDesc('assigned_at')
     ->get();
 
-    // Group assignments into "batches" (key = hospital_upload_id or image.batch_no)
     $grouped = $all->groupBy(function (Assignment $a) {
         if ($a->hospital_upload_id) {
             return 'hospital:'.$a->hospital_upload_id;
@@ -49,22 +49,49 @@ public function index()
         return 'batch:'.$a->batch_id;
     });
 
-    // Map to items for view
     $items = $grouped->map(function (Collection $group, $key) {
         [$type, $id] = explode(':', $key, 2);
         $first = $group->first();
 
+        // Convert all non-null assigned_at values to Carbon, then pick the latest
+        $assignedAtCarbon = $group
+            ->pluck('assigned_at')
+            ->filter() // remove nulls
+            ->map(function ($d) {
+                if ($d instanceof \DateTime) {
+                    return Carbon::instance($d);
+                }
+                // If it's already a Carbon this will keep it; if string, parse it
+                return Carbon::parse($d);
+            })
+            ->sortByDesc(function (Carbon $c) {
+                return $c->getTimestamp();
+            })
+            ->first();
+
+        // Fallback to first->created_at (ensure it's Carbon)
+        if (! $assignedAtCarbon) {
+            $assignedAtCarbon = $first->created_at instanceof \DateTime
+                ? Carbon::instance($first->created_at)
+                : Carbon::parse($first->created_at);
+        }
+
+        // Deadline: pick first non-null and ensure Carbon (or null)
+        $deadlineRaw = $group->pluck('deadline')->filter()->first() ?? null;
+        $deadlineCarbon = $deadlineRaw
+            ? ($deadlineRaw instanceof \DateTime ? Carbon::instance($deadlineRaw) : Carbon::parse($deadlineRaw))
+            : null;
+
         return (object)[
             'type' => $type === 'hospital' ? 'hospital' : 'batch',
             'batch_id' => $id,
-            'batch_no' => $id, // Add this for the route parameters
-            'assigned_at' => $first->assigned_at ?? $first->created_at,
-            'deadline' => $first->deadline,
+            'batch_no' => $id,
+            'assigned_at' => $assignedAtCarbon ? $assignedAtCarbon->format('Y-m-d H:i') : null,
+            'deadline' => $deadlineCarbon ? $deadlineCarbon->format('Y-m-d H:i') : null,
             'status' => $first->status,
             'assignments_count' => $group->count(),
-            // Get the uploader object instead of just email
-            'uploader' => optional($first->image)->uploader 
-                         ?? optional($first->hospitalUpload)->uploader 
+            'uploader' => optional($first->image)->uploader
+                         ?? optional($first->hospitalUpload)->uploader
                          ?? null,
         ];
     })->values();
@@ -159,7 +186,7 @@ public function createReport(string $batch_no)
         $fileType = $upload->fileType;
         return view('reader.assignments.report-create', [
             'batch_no' => $batch_no,
-            
+
             'type'     => 'hospital',
             'upload'   => $upload,
             'fileType' => $fileType,
