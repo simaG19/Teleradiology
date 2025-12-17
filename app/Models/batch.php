@@ -21,9 +21,10 @@ class Batch extends Model
         'confirmed',
     ];
   public function user()
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
+{
+    return $this->belongsTo(User::class, 'uploader_id', 'id');
+}
+
 
         public function uploader()
     {
@@ -31,6 +32,7 @@ class Batch extends Model
         // If uploader is in users table, use App\Models\User::class instead
         // return $this->belongsTo(\App\Models\User::class, 'uploader_id');
     }
+
     public function fileType()
     {
         return $this->belongsTo(FileType::class, 'file_type_id');
