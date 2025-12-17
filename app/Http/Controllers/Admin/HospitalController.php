@@ -31,10 +31,12 @@ class HospitalController extends Controller
 public function allUploads()
 {
     $hospital = Auth::user()->hospitalProfile;
-    $uploads  = HospitalUpload::with(['hospital','uploader','fileType','assignments.report'])
+    $uploads  = HospitalUpload::with(['hospital', 'hospital.user','uploader','fileType','assignments.report'])
                 // ->where('hospital_id', $hospital->id)
                 ->orderByDesc('created_at')
                 ->get();
+// $first = HospitalUpload::with('hospital')->first();
+// dd($first->toArray(), $first->hospital);
 
     return view('admin.hospitals.all', compact('uploads'));
 }
