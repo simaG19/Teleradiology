@@ -1,4 +1,4 @@
-name: Laravel 
+name: Laravel Tests
 
 on: [push, pull_request]
 
@@ -12,12 +12,12 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.1'
+        php-version: '8.2'  # Changed from 8.1 to 8.2
         
     - name: Validate composer.json
       run: composer validate
       
-    - name: Install Dependencies (skip scripts)
+    - name: Install Dependencies
       run: composer install --no-interaction --prefer-dist --no-scripts
       
     - name: Generate Key
