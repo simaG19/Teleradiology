@@ -36,9 +36,8 @@ A lightweight teleradiology web app for receiving DICOM ZIPs, assigning them to 
 ## Install & run (local)
 ```bash
 # clone & cd
-git clone <your-repo-url>
-cd <your-repo-dir>
-
+git clone https://github.com/simaG19/Teleradiology.git
+cd Teleradiology
 # install php deps
 composer install
 
