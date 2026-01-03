@@ -1,5 +1,5 @@
 {{-- resources/views/admin/assignments/index.blade.php --}}
-<x-app-layout>
+<x-admin-lay>
   <x-slot name="header">
     <div class="flex items-center justify-between">
       <div>
@@ -59,7 +59,7 @@
               <thead class="bg-gray-50">
                 <tr>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Batch / Upload</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
+                  {{-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th> --}}
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Uploader</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned By</th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reader</th>
@@ -121,7 +121,7 @@
                     </td>
 
                     {{-- Source (Hospital name or N/A) --}}
-                    <td class="px-6 py-4 text-sm text-gray-700">
+                    {{-- <td class="px-6 py-4 text-sm text-gray-700">
                       @if(!empty($assignment->hospitalUpload) && !empty($assignment->hospitalUpload->hospital))
                         {{ optional($assignment->hospitalUpload->hospital)->hospital_name }}
                       @elseif(!empty($assignment->batch) && !empty($assignment->batch->hospital))
@@ -129,7 +129,7 @@
                       @else
                         <span class="text-gray-500">—</span>
                       @endif
-                    </td>
+                    </td> --}}
 
                     {{-- Uploader --}}
                     <td class="px-6 py-4 text-sm text-gray-700">
@@ -159,9 +159,16 @@
                     </td>
 
                     {{-- Assigned at --}}
-                    <td class="px-6 py-4 text-sm text-gray-700">
-                      {{ optional($assignment->assigned_at ?? $assignment->created_at)->format('Y-m-d H:i') ?? '—' }}
-                    </td>
+                   <td class="px-6 py-4 text-sm text-gray-700">
+    @if($assignment->assigned_at)
+        {{ \Carbon\Carbon::parse($assignment->assigned_at)->format('Y-m-d H:i') }}
+    @elseif($assignment->created_at)
+        {{ \Carbon\Carbon::parse($assignment->created_at)->format('Y-m-d H:i') }}
+    @else
+        —
+    @endif
+</td>
+
 
                     {{-- Deadline --}}
                     <td class="px-6 py-4 text-sm text-gray-700">
@@ -231,4 +238,4 @@
       </div>
     </main>
   </div>
-</x-app-layout>
+</x-admin-lay>

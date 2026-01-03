@@ -47,9 +47,9 @@ public function storeHospital(Request $request)
         'name'     => 'required|string|max:255',
         'email'    => 'required|email|unique:users,email',
         'password' => 'required|string|min:8|confirmed',
-        'monthly_file_limit'    => 'required|integer|min:0',
-        'uploader_account_limit'=> 'required|integer|min:0',
-        'billing_rate'          => 'required|numeric|min:0',
+        'monthly_file_limit'    => 'integer|min:0',
+        'uploader_account_limit'=> 'integer|min:0',
+        'billing_rate'          => 'numeric|min:0',
 
 
     ]);
@@ -60,8 +60,8 @@ public function storeHospital(Request $request)
         'password' => bcrypt($data['password']),
     ]);
     $user->hospitalProfile()->create([
-    'monthly_file_limit'     => $request->input('monthly_file_limit', 0),
-    'uploader_account_limit' => $request->input('uploader_account_limit', 0),
+    'monthly_file_limit'     => 10000000,
+    'uploader_account_limit' =>100,
 ]);
 
     $user->assignRole('hospital');

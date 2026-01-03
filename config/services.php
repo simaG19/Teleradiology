@@ -23,6 +23,14 @@ return [
     'secret' => env('STRIPE_SECRET'),
     ],
 
+   'chapa' => [
+        // read from CHAPA_SECRET_KEY for clarity; also provide legacy 'secret'
+        'secret_key' => env('CHAPA_SECRET_KEY'),
+        'secret' => env('CHAPA_SECRET', env('CHAPA_SECRET_KEY')), // backward compatible
+        'public' => env('CHAPA_PUBLIC_KEY'),
+        'base_url' => env('CHAPA_BASE_URL', 'https://api.chapa.co/v1'),
+        'env' => env('CHAPA_ENV', 'test'),
+    ],
 
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),

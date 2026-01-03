@@ -1,5 +1,5 @@
 {{-- resources/views/admin/file_types/index.blade.php --}}
-<x-app-layout>
+<x-admin-lay>
   <x-slot name="header">
     <div class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -84,4 +84,4 @@
       </div>
     </main>
   </div>
-</x-app-layout>
+</x-admin-lay>

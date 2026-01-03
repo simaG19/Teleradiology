@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-admin-lay>
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="text-xl font-semibold">Create New Hospital</h2>
@@ -164,4 +164,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-admin-lay>

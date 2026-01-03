@@ -1,5 +1,5 @@
 {{-- resources/views/admin/file_types/create.blade.php --}}
-<x-app-layout>
+<x-admin-lay>
   <x-slot name="header">
     <h2 class="text-xl font-semibold">New File Type</h2>
   </x-slot>
@@ -55,4 +55,4 @@
 
     </div>
   </div>
-</x-app-layout>
+</x-admin-lay>

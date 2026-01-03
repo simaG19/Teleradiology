@@ -15,15 +15,32 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+
 class BatchController extends Controller
 {
-  public function index(Request $request)
+
+public function index(Request $request)
 {
-    // Base query eager-loading relations you need
     $query = Batch::with(['user', 'uploader', 'fileType'])
                   ->orderByDesc('created_at');
 
-    // By default show only unconfirmed batches (confirmed = false OR NULL)
+    // Apply filters
+    if ($request->filled('search')) {
+        $query->where('id', 'LIKE', "%{$request->search}%")
+              ->orWhereHas('uploader', function ($q) use ($request) {
+                  $q->where('name', 'LIKE', "%{$request->search}%");
+              });
+    }
+
+    if ($request->filled('urgency')) {
+        $query->where('urgency', $request->urgency);
+    }
+
+    if ($request->filled('payment_status')) {
+        $query->where('paid', $request->payment_status);
+    }
+
+    // Show only unconfirmed unless "all" is true
     if (! $request->boolean('all')) {
         $query->where(function ($q) {
             $q->where('confirmed', false)
@@ -33,7 +50,12 @@ class BatchController extends Controller
 
     $batches = $query->get();
 
-    return view('admin.batches.index', compact('batches'));
+    // 👉 Send dropdown options to blade
+    $urgencyOptions = ['Routine', 'Stat'];
+    $paymentStatusOptions = ['paid', 'unpaid'];
+
+
+    return view('admin.batches.index', compact('batches', 'urgencyOptions', 'paymentStatusOptions'));
 }
 
 public function download(Batch $batch)

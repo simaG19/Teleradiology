@@ -15,6 +15,14 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
  use App\Models\HospitalUpload;
  use Illuminate\Support\Facades\Auth;
+
+ use App\Models\Batch;
+use App\Models\FileType;
+
+
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
 class HospitalController extends Controller
 {
 
@@ -23,10 +31,12 @@ class HospitalController extends Controller
 public function allUploads()
 {
     $hospital = Auth::user()->hospitalProfile;
-    $uploads  = HospitalUpload::with(['hospital','uploader','fileType','assignments.report'])
+    $uploads  = HospitalUpload::with(['hospital', 'hospital.user','uploader','fileType','assignments.report'])
                 // ->where('hospital_id', $hospital->id)
                 ->orderByDesc('created_at')
                 ->get();
+// $first = HospitalUpload::with('hospital')->first();
+// dd($first->toArray(), $first->hospital);
 
     return view('admin.hospitals.all', compact('uploads'));
 }
@@ -64,11 +74,11 @@ public function allUploads()
             'email' => 'required|email|unique:users',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',
-            'monthly_file_limit' => 'required|integer|min:1',
+            // 'monthly_file_limit' => 'required|integer|min:1',
             'uploader_account_limit' => 'required|integer|min:1',
-            'monthly_rate' => 'required|numeric|min:0',
-            'per_file_rate' => 'required|numeric|min:0',
-            'billing_type' => 'required|in:monthly,per_file,both',
+            // 'monthly_rate' => 'required|numeric|min:0',
+            // 'per_file_rate' => 'required|numeric|min:0',
+            // 'billing_type' => 'required|in:monthly,per_file,both',
             'contract_start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:contract_start_date',
         ]);
@@ -94,11 +104,11 @@ public function allUploads()
             'contact_person' => $request->contact_person,
             'phone' => $request->phone,
             'address' => $request->address,
-            'monthly_file_limit' => $request->monthly_file_limit,
+            // 'monthly_file_limit' => $request->monthly_file_limit,
             'uploader_account_limit' => $request->uploader_account_limit,
-            'monthly_rate' => $request->monthly_rate,
-            'per_file_rate' => $request->per_file_rate,
-            'billing_type' => $request->billing_type,
+            // 'monthly_rate' => $request->monthly_rate,
+            // 'per_file_rate' => $request->per_file_rate,
+            // 'billing_type' => $request->billing_type,
             'contract_start_date' => $request->contract_start_date,
             'contract_end_date' => $request->contract_end_date,
         ]);
@@ -197,10 +207,13 @@ public function allUploads()
 
 
 
+// App\Http/Controllers/Admin/HospitalController.php (billingByUser)
+
+
 
 public function billingByUser(User $user)
 {
-    // If the User has no profile yet, create a default one
+    // ensure profile exists
     $profile = $user->hospitalProfile
                ?? $user->hospitalProfile()->create([
                       'monthly_file_limit'      => 0,
@@ -208,22 +221,105 @@ public function billingByUser(User $user)
                       'billing_rate'            => 0,
                   ]);
 
-    $rate  = $profile->billing_rate;
+    $rate  = (float) $profile->billing_rate;
     $start = now()->startOfMonth();
     $end   = now()->endOfMonth();
 
-    $uploads = MedicalImage::where('uploader_id', $user->id)
-        ->whereBetween('created_at', [$start, $end])
-        ->orderBy('created_at')
-        ->get(['original_name', 'created_at']);
+    // Get uploader ids for the hospital (fallback to the user id if none)
+    $uploaderIds = $profile->uploaders()->pluck('id')->toArray();
+    if (empty($uploaderIds)) {
+        $uploaderIds = [$user->id];
+    }
 
-    $count = $uploads->count();
-    $bill  = $count * $rate;
+    // --- Customer batches (grouped by batch_no) ---
+    $customerBatches = MedicalImage::select(
+            'batch_no',
+            DB::raw('COUNT(*) as files_count'),
+            DB::raw('MIN(created_at) as first_uploaded_at')
+        )
+        ->whereIn('uploader_id', $uploaderIds)
+        ->whereBetween('created_at', [$start, $end])
+        ->groupBy('batch_no')
+        ->orderBy('first_uploaded_at')
+        ->get();
+
+    // fetch corresponding Batch records (to read file_type_id / quoted_price)
+    $batchIds = $customerBatches->pluck('batch_no')->unique()->values()->all();
+    $batchRecords = Batch::with('fileType')
+                    ->whereIn('id', $batchIds)
+                    ->get()
+                    ->keyBy('id');
+
+    // Build lines for customer batches using file type name
+    $customerLines = $customerBatches->map(function ($row) use ($rate, $batchRecords) {
+        $batchId = (string) $row->batch_no;
+        $batch = $batchRecords->get($batchId);
+
+        // prefer batch quoted_price if present, otherwise use billing_rate * files_count
+        $price = null;
+        if ($batch && !is_null($batch->quoted_price)) {
+            $price = (float) $batch->quoted_price;
+        } else {
+            $price = $row->files_count * $rate;
+        }
+
+        // file type name (attempt to read from related Batch->fileType)
+        $fileTypeName = null;
+        $fileTypeAnatomy = null;
+        if ($batch && $batch->fileType) {
+            $fileTypeName    = $batch->fileType->name;
+            $fileTypeAnatomy = $batch->fileType->anatomy ?? null;
+        }
+
+        return (object)[
+            'source'        => 'customer',
+            'batch_id'      => $batchId,
+            'date'          => $row->first_uploaded_at,
+            'files_count'   => (int) $row->files_count,     // keep available if you need later
+            'price'         => (float) $price,
+            'file_type_name'=> $fileTypeName,
+            'file_type_anatomy' => $fileTypeAnatomy,
+        ];
+    });
+
+    // --- Hospital uploads (ZIPs) ---
+    $hospitalUploads = HospitalUpload::where('hospital_id', $profile->id)
+                        ->whereBetween('created_at', [$start, $end])
+                        ->orderBy('created_at')
+                        ->get();
+
+    $hospitalLines = $hospitalUploads->map(function ($h) use ($rate) {
+        $files = (int) ($h->file_count ?? 0);
+        $price = !is_null($h->quoted_price) ? (float)$h->quoted_price : ($files * $rate);
+
+        $fileTypeName = optional($h->fileType)->name;
+        $fileTypeAnatomy = optional($h->fileType)->anatomy ?? null;
+
+        return (object)[
+            'source'        => 'hospital',
+            'batch_id'      => $h->id,
+            'date'          => $h->created_at,
+            'files_count'   => $files,
+            'price'         => (float) $price,
+            'file_type_name'=> $fileTypeName,
+            'file_type_anatomy' => $fileTypeAnatomy,
+        ];
+    });
+
+    // combine, sort and totals
+    $lines = $customerLines->concat($hospitalLines)
+             ->sortByDesc('date')
+             ->values();
+
+    // count here we switch to count of batches (not number of files)
+    $count = $lines->count();
+    $bill  = $lines->sum('price');
 
     return view('admin.hospitals.billing', compact(
-        'user','profile','uploads','count','bill','start','end'
+        'user','profile','lines','count','bill','start','end'
     ));
 }
+
 
 
 

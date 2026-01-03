@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'TeleRadiology Client') }}</title>
+        <title>{{ config('app.name', 'TeleRadiology Uploader') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -28,9 +28,7 @@
                             <div class="shrink-0 flex items-center">
                                 <a href="{{ route('home') }}">
                                     <div class="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
-                                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
+                                       <p>logout</p>
                                     </div>
                                 </a>
                                 <span class="ml-3 text-xl font-semibold text-gray-800 hidden sm:block">TeleRadiology</span>
@@ -41,12 +39,12 @@
                                 {{-- <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                                     {{ __('Dashboard') }}
                                 </x-nav-link> --}}
-                                <x-nav-link :href="route('uploads.create')" :active="request()->routeIs('uploads.create')">
+                                {{-- <x-nav-link :href="route('uploads.create')" :active="request()->routeIs('uploads.create')">
                                     {{ __('Upload New DICOM') }}
                                 </x-nav-link>
                                 <x-nav-link :href="route('uploads.index')" :active="request()->routeIs('uploads.index')">
                                     {{ __('My Uploads') }}
-                                </x-nav-link>
+                                </x-nav-link> --}}
                                 {{-- Assuming a general payments overview page, or linking to uploads.index for now --}}
                                 {{-- <x-nav-link :href="route('uploads.index')" :active="request()->routeIs('uploads.pay.form')">
                                     {{ __('Payments') }}
@@ -55,7 +53,7 @@
                         </div>
 
                         <!-- Settings Dropdown -->
-                        <div class="hidden sm:flex sm:items-center sm:ml-6">
+                        {{-- <div class="hidden sm:flex sm:items-center sm:ml-6">
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
                                     <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -86,23 +84,23 @@
                                     </form>
                                 </x-slot>
                             </x-dropdown>
-                        </div>
+                        </div> --}}
 
                         <!-- Hamburger -->
-                        <div class="-mr-2 flex items-center sm:hidden">
+                        {{-- <div class="-mr-2 flex items-center sm:hidden">
                             <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
                                 <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                     <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                                     <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
 
                 <!-- Responsive Navigation Menu -->
                 <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-                    <div class="pt-2 pb-3 space-y-1">
+                    {{-- <div class="pt-2 pb-3 space-y-1">
                         <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             {{ __('Dashboard') }}
                         </x-responsive-nav-link>
@@ -115,11 +113,11 @@
                         {{-- <x-responsive-nav-link :href="route('uploads.index')" :active="request()->routeIs('uploads.pay.form')">
                             {{ __('Payments') }}
                         </x-responsive-nav-link> --}}
-                    </div>
+                    {{-- </div> --}} --}}
 
                     <!-- Responsive Settings Options -->
-                    <div class="pt-4 pb-1 border-t border-gray-200">
-                        <div class="px-4">
+                    {{-- <div class="pt-4 pb-1 border-t border-gray-200"> --}}
+                        {{-- <div class="px-4">
                             <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                             <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
                         </div>
@@ -127,10 +125,10 @@
                         <div class="mt-3 space-y-1">
                             <x-responsive-nav-link :href="route('profile.edit')">
                                 {{ __('Profile') }}
-                            </x-responsive-nav-link>
+                            </x-responsive-nav-link> --}}
 
                             <!-- Authentication -->
-                            <form method="POST" action="{{ route('logout') }}">
+                            {{-- <form method="POST" action="{{ route('logout') }}">
                                 @csrf
 
                                 <x-responsive-nav-link :href="route('logout')"
@@ -139,8 +137,8 @@
                                     {{ __('Log Out') }}
                                 </x-responsive-nav-link>
                             </form>
-                        </div>
-                    </div>
+                        </div> --}}
+                    {{-- </div> --}}
                 </div>
             </nav>
 

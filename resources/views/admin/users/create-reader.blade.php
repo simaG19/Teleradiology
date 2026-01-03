@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-admin-lay>
   <x-slot name="header">
     <h2 class="text-xl font-semibold">Add New Reader</h2>
   </x-slot>
@@ -56,4 +56,4 @@
       </div>
     </main>
   </div>
-</x-app-layout>
+</x-admin-lay>

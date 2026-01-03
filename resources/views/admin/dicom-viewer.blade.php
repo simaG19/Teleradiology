@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-admin-lay>
   <x-slot name="header">
     <h2 class="text-xl font-semibold">DICOM Viewer</h2>
   </x-slot>
@@ -38,4 +38,4 @@
       });
     </script>
   @endpush
-</x-app-layout>
+</x-admin-lay>

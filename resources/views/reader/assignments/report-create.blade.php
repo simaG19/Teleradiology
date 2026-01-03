@@ -1,5 +1,5 @@
 {{-- resources/views/reader/assignments/report-create.blade.php --}}
-<x-app-layout>
+<x-read-lay>
   <x-slot name="header">
     <div class="flex items-center justify-between">
       <div>
@@ -133,4 +133,4 @@
       </form>
     </div>
   </div>
-</x-app-layout>
+</x-read-lay>

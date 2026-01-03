@@ -30,26 +30,123 @@ use App\Models\FileType;
 use App\Models\HospitalProfile;
 
 
+
+use Illuminate\Support\Collection;
+
+
+use App\Models\Report;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+
 class UploaderDashboardController extends Controller
 {
     protected function guard() {
         return Auth::guard('uploader');
     }
 
-    /** GET /uploader/dashboard */
-   public function index()
-    {
-        $uploader = Auth::guard('uploader')->user();
 
-        // Fetch all “batch” uploads, not individual images:
-        $batches = HospitalUpload::with(['fileType','assignments.report'])
-                         ->where('uploader_id', $uploader->id)
-                         ->orderByDesc('created_at')
-                         ->get();
+public function listReports(string $batch)
+{
+    $uploader = $this->guard()->user();
 
-        // Pass $batches (not $images) into the view:
-        return view('hospital.uploaders.dashboard', compact('batches'));
+    // find hospital upload
+    $upload = HospitalUpload::with(['assignments.report.assignedBy'])
+                ->where('id', $batch)
+                ->where('uploader_id', $uploader->id) // ensure uploader owns it
+                ->first();
+
+    if (! $upload) {
+        return redirect()->route('uploader.dashboard')
+                         ->withErrors(['batch' => 'Batch not found or access denied.']);
     }
+
+    // collect reports from assignments
+    $reports = $upload->assignments->map(fn($a) => $a->report)->filter();
+
+    return view('hospital.uploaders.reports-index', compact('upload','reports'));
+}
+
+/**
+ * Download a single report (checks ownership)
+ */
+public function downloadReport(string $batch, Report $report)
+{
+    $uploader = $this->guard()->user();
+
+    // ensure the HospitalUpload exists and belongs to this uploader
+    $upload = HospitalUpload::where('id', $batch)
+              ->where('uploader_id', $uploader->id)
+              ->first();
+
+    if (! $upload) {
+        return redirect()->route('uploader.dashboard')
+                         ->withErrors(['download' => 'Batch not found or access denied.']);
+    }
+
+    // ensure the report belongs to an assignment for this hospital upload
+    $assignment = $report->assignment;
+    if (! $assignment) {
+        return redirect()->back()->withErrors(['download' => 'Report is invalid.']);
+    }
+
+    // check it references the assignment for this hospital upload
+    if ($assignment->hospital_upload_id !== $upload->id) {
+        return redirect()->back()->withErrors(['download' => 'Report does not belong to this batch.']);
+    }
+
+    // pdf_path should be a storage path returned when saving file (e.g. "reports/{batch}/report_11.pdf")
+    $path = $report->pdf_path;
+    if (empty($path)) {
+        return redirect()->back()->withErrors(['download' => 'Report file not found.']);
+    }
+
+    // try public disk first then local
+    $disks = ['public','local'];
+    foreach ($disks as $d) {
+        if (Storage::disk($d)->exists($path)) {
+            $full = Storage::disk($d)->path($path);
+            return response()->download($full, basename($path));
+        }
+    }
+
+    return redirect()->back()->withErrors(['download' => 'Report file missing on disk.']);
+}
+
+    /** GET /uploader/dashboard */
+  // app/Http/Controllers/Hospital/UploaderDashboardController.php
+
+// app/Http/Controllers/Hospital/UploaderDashboardController.php
+
+
+public function index()
+{
+    $uploader = Auth::guard('uploader')->user();
+
+    // eager-load assignments (and their report) and fileType
+    $batches = HospitalUpload::with(['fileType', 'assignments']) // don't rely on assignments.report here
+                 ->where('uploader_id', $uploader->id)
+                 ->orderByDesc('created_at')
+                 ->get();
+
+    // Build a map batch_id => first report (prefer the newest)
+    $reportsMap = $batches->mapWithKeys(function (HospitalUpload $batch) {
+        // collect assignment ids for this hospital upload
+        $assignmentIds = $batch->assignments->pluck('id')->filter()->values()->all();
+
+        if (! empty($assignmentIds)) {
+            // Query Report table once for these assignments, newest first
+            $report = Report::whereIn('assignment_id', $assignmentIds)
+                            ->orderByDesc('created_at')
+                            ->first();
+            return [$batch->id => $report];
+        }
+
+        // no assignments -> no report
+        return [$batch->id => null];
+    });
+
+    return view('hospital.uploaders.dashboard', compact('batches', 'reportsMap'));
+}
 
     /** GET /uploader/uploads/create */
     public function create()
@@ -117,22 +214,22 @@ class UploaderDashboardController extends Controller
             }
             $zipObj->close();
 
-            // 3) compute amount based on selected file type price
-            $amount = bcmul((string)$fileCount, (string)$fileType->price_per_file, 2); // string math to avoid float issues
+   // 3) compute amount = selected file type price (one price per batch)
+$amount = (string) number_format($fileType->price_per_file, 2, '.', '');
 
-            // 4) create the HospitalUpload row (store zip_path, file_count, quoted_price)
-            $upload = HospitalUpload::create([
-                'id'               => $batchNo,
-                'hospital_id'      => $uploader->hospital_id,
-                'uploader_id'      => $uploader->id,
-                'zip_path'         => $zipPath,      // path relative to storage/app
-                'file_count'       => $fileCount,
-                'urgency'          => $data['urgency'],
-                'clinical_history' => $data['clinical_history'],
-                'file_type_id'     => $fileType->id,
-                'quoted_price'     => $amount,
-                'status'           => 'uploaded',
-            ]);
+// 4) create the HospitalUpload row (store zip_path, file_count, quoted_price)
+$upload = HospitalUpload::create([
+    'id'               => $batchNo,
+    'hospital_id'      => $uploader->hospital_id,
+    'uploader_id'      => $uploader->id,
+    'zip_path'         => $zipPath,      // path relative to storage/app
+    'file_count'       => $fileCount,
+    'urgency'          => $data['urgency'],
+    'clinical_history' => $data['clinical_history'],
+    'file_type_id'     => $fileType->id,
+    'quoted_price'     => $amount,       // now just the file type price
+    'status'           => 'uploaded',
+]);
 
             // 5) increment hospital profile billing_rate by amount
             $profile = HospitalProfile::where('id', $uploader->hospital_id)->first();

@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'TeleRadiology Client') }}</title>
+        <title>{{ config('app.name', 'TeleRadiology Admin') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -41,12 +41,12 @@
                                 {{-- <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                                     {{ __('Dashboard') }}
                                 </x-nav-link> --}}
-                                <x-nav-link :href="route('uploads.create')" :active="request()->routeIs('uploads.create')">
-                                    {{ __('Upload New DICOM') }}
+                                <x-nav-link :href="route('hospital.dashboard')" :active="request()->routeIs('hospital.dashboard')">
+                                    {{ __('Dashboard') }}
                                 </x-nav-link>
-                                <x-nav-link :href="route('uploads.index')" :active="request()->routeIs('uploads.index')">
+                                {{-- <x-nav-link :href="route('uploads.index')" :active="request()->routeIs('uploads.index')">
                                     {{ __('My Uploads') }}
-                                </x-nav-link>
+                                </x-nav-link> --}}
                                 {{-- Assuming a general payments overview page, or linking to uploads.index for now --}}
                                 {{-- <x-nav-link :href="route('uploads.index')" :active="request()->routeIs('uploads.pay.form')">
                                     {{ __('Payments') }}
@@ -103,15 +103,15 @@
                 <!-- Responsive Navigation Menu -->
                 <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
                     <div class="pt-2 pb-3 space-y-1">
-                        <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                        <x-responsive-nav-link :href="route('hospital.dashboard')" :active="request()->routeIs('hospital.dashboard')">
                             {{ __('Dashboard') }}
                         </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('uploads.create')" :active="request()->routeIs('uploads.create')">
+                        {{-- <x-responsive-nav-link :href="route('uploads.create')" :active="request()->routeIs('uploads.create')">
                             {{ __('Upload New DICOM') }}
                         </x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('uploads.index')" :active="request()->routeIs('uploads.index')">
                             {{ __('My Uploads') }}
-                        </x-responsive-nav-link>
+                        </x-responsive-nav-link> --}}
                         {{-- <x-responsive-nav-link :href="route('uploads.index')" :active="request()->routeIs('uploads.pay.form')">
                             {{ __('Payments') }}
                         </x-responsive-nav-link> --}}

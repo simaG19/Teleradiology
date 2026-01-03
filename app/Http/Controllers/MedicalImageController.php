@@ -120,7 +120,8 @@ public function showPaymentForm($batchId)
                          ->withErrors(['pay'=>'Price not set yet.']);
     }
 
-    // Now $batch->fileType and $batch->images are available
-    return view('uploads.pay', compact('batch'));
+    $user = Auth::user(); // Get authenticated user
+
+    return view('uploads.pay', compact('batch', 'user'));
 }
 }

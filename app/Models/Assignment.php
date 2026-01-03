@@ -9,9 +9,8 @@ class Assignment extends Model
     //
 
   protected $fillable = [
-    'image_id',
     'batch_id',
-     'hospital_upload_id',
+    'hospital_upload_id',
     'assigned_by',
     'assigned_to',
     'assigned_at',

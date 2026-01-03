@@ -15,13 +15,47 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\MedicalImageController as AdminMedicalImageController;
 
 
+
+
+use App\Http\Controllers\ChapaController;
+
+
+Route::get('/', function(){ return view('welcome'); });
+
+
+
+
+Route::post('/chapa/pay/{batch}', [ChapaController::class, 'initializeForBatch'])->name('chapa.pay');
+Route::get('/chapa/callback/{id}', [ChapaController::class, 'callback'])->name('chapa.callback');
+Route::get('/chapa/success/{batch}', [ChapaController::class, 'success'])->name('chapa.success');
+Route::get('/chapa/cancel', [ChapaController::class, 'cancel'])->name('chapa.cancel');
+
+
+
+
+
+
+
+
+
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
 
+// In routes/web.php
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    if (Auth::check() && Auth::user()->hasRole('customer')) {
+        return redirect()->route('uploads.create');
+    }
+     if (Auth::check() && Auth::user()->hasRole('admin')) {
+        return redirect()->route('admin.images.index');
+    }
+     if (Auth::check() && Auth::user()->hasRole('hospital')) {
+        return redirect()->route('hospital.dashboard');
+    }
+    return view('dashboard'); // or redirect elsewhere for other roles
 })->middleware(['auth', 'verified'])->name('dashboard');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -199,9 +233,10 @@ Route::middleware(['auth', 'role:hospital'])
 
 
 
- use App\Http\Controllers\Hospital\UploaderAuthController;
+use App\Http\Controllers\Hospital\UploaderAuthController;
+use App\Http\Controllers\Hospital\UploaderDashboardController;
 
-// Uploader auth
+// Uploader auth routes (public - no auth middleware)
 Route::prefix('uploader')->name('uploader.')->group(function(){
     // Show login form
     Route::get('login', [UploaderAuthController::class, 'showLoginForm'])
@@ -209,37 +244,34 @@ Route::prefix('uploader')->name('uploader.')->group(function(){
     // Handle login
     Route::post('login', [UploaderAuthController::class, 'login'])
          ->name('login.submit');
+});
+
+// Uploader protected routes (require auth:uploader middleware)
+Route::middleware('auth:uploader')->prefix('uploader')->name('uploader.')->group(function(){
     // Logout
     Route::post('logout', [UploaderAuthController::class, 'logout'])
          ->name('logout');
+
+    // Dashboard = list of uploads
+    Route::get('dashboard', [UploaderDashboardController::class, 'index'])
+         ->name('dashboard');
+
+    // New upload
+    Route::get('uploads/create', [UploaderDashboardController::class, 'create'])
+         ->name('uploads.create');
+    Route::post('uploads', [UploaderDashboardController::class, 'store'])
+         ->name('uploads.store');
+
+    // Reports
+    Route::get('uploads/{batch}/reports', [UploaderDashboardController::class, 'listReports'])
+         ->name('uploads.reports.index');
+    Route::get('uploads/{batch}/reports/{report}', [UploaderDashboardController::class, 'downloadReport'])
+         ->name('uploads.reports.download');
+
+    // View single upload + report
+    Route::get('uploads/{image}', [UploaderDashboardController::class, 'show'])
+         ->name('uploads.show');
 });
-
-
-
-
-
-use App\Http\Controllers\Hospital\UploaderDashboardController;
-
-Route::middleware('auth:uploader')
-     ->prefix('uploader')
-     ->name('uploader.')
-     ->group(function(){
-         // Dashboard = list of uploads
-         Route::get('dashboard', [UploaderDashboardController::class, 'index'])
-              ->name('dashboard');
-
-         // New upload
-         Route::get('uploads/create', [UploaderDashboardController::class, 'create'])
-              ->name('uploads.create');
-         Route::post('uploads', [UploaderDashboardController::class, 'store'])
-              ->name('uploads.store');
-
-         // View single upload + report
-         Route::get('uploads/{image}', [UploaderDashboardController::class, 'show'])
-              ->name('uploads.show');
-     });
-
-
 
 
 

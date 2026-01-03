@@ -21,6 +21,11 @@ class HospitalUpload extends Model
     {
         return $this->belongsTo(HospitalProfile::class);
     }
+    public function assignments()
+{
+    return $this->hasMany(\App\Models\Assignment::class, 'hospital_upload_id');
+}
+
 
  public function uploader()
     {
@@ -37,15 +42,15 @@ class HospitalUpload extends Model
     /**
      * All assignments for this batch, via its medical images.
      */
-    public function assignments()
-    {
-        return $this->hasManyThrough(
-            \App\Models\Assignment::class,     // The final model
-            \App\Models\MedicalImage::class,   // The intermediate
-            'batch_no',    // Foreign key on medical_images → hospital_uploads.id
-            'image_id',    // Foreign key on assignments → medical_images.id
-            'id',          // Local key on hospital_uploads
-            'id'           // Local key on medical_images
-        );
-    }
+    // public function assignments()
+    // {
+    //     return $this->hasManyThrough(
+    //         \App\Models\Assignment::class,     // The final model
+    //         \App\Models\MedicalImage::class,   // The intermediate
+    //         'batch_no',    // Foreign key on medical_images → hospital_uploads.id
+    //         'image_id',    // Foreign key on assignments → medical_images.id
+    //         'id',          // Local key on hospital_uploads
+    //         'id'           // Local key on medical_images
+    //     );
+    // }
 }

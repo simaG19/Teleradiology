@@ -41,12 +41,12 @@
                                 {{-- <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                                     {{ __('Dashboard') }}
                                 </x-nav-link> --}}
-                                <x-nav-link :href="route('uploads.create')" :active="request()->routeIs('uploads.create')">
+                                {{-- <x-nav-link :href="route('uploads.create')" :active="request()->routeIs('uploads.create')">
                                     {{ __('Upload New DICOM') }}
                                 </x-nav-link>
                                 <x-nav-link :href="route('uploads.index')" :active="request()->routeIs('uploads.index')">
                                     {{ __('My Uploads') }}
-                                </x-nav-link>
+                                </x-nav-link> --}}
                                 {{-- Assuming a general payments overview page, or linking to uploads.index for now --}}
                                 {{-- <x-nav-link :href="route('uploads.index')" :active="request()->routeIs('uploads.pay.form')">
                                     {{ __('Payments') }}
@@ -70,9 +70,9 @@
                                 </x-slot>
 
                                 <x-slot name="content">
-                                    <x-dropdown-link :href="route('profile.edit')">
+                                    {{-- <x-dropdown-link :href="route('profile.edit')">
                                         {{ __('Profile') }}
-                                    </x-dropdown-link>
+                                    </x-dropdown-link> --}}
 
                                     <!-- Authentication -->
                                     <form method="POST" action="{{ route('logout') }}">
